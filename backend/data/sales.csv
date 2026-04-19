@@ -1,0 +1,3 @@
+order_id,item_id,qty,status,due_date
+ORD-101,SKU-A,400,Pending,2026-05-01
+ORD-102,SKU-B,300,Pending,2026-05-05

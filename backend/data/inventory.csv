@@ -1,0 +1,5 @@
+item_id,name,type,current_stock,reorder_point,lead_time_days,cost_per_unit
+RAW-001,Microcontroller V2,Raw,500,200,14,15.50
+RAW-002,Steel Housing,Raw,2000,500,7,5.00
+SKU-A,Premium Widget,Finished,50,100,2,150.00
+SKU-B,Standard Widget,Finished,100,150,1,80.00

@@ -1,0 +1,5 @@
+parent_id,child_id,qty_required
+SKU-A,RAW-001,1
+SKU-A,RAW-002,2
+SKU-B,RAW-001,1
+SKU-B,RAW-002,1

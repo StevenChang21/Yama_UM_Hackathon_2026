@@ -1,0 +1,2 @@
+work_order_id,item_id,status,qty,eta
+WO-001,SKU-A,In Progress,100,2026-04-22
