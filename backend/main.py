@@ -45,12 +45,88 @@ def get_inventory():
                 "current_stock": item["current_stock"],
                 "reorder_point": item["reorder_point"],
                 "supplier_lead_time_days": item["lead_time_days"],
+                "cost_per_unit": item["cost_per_unit"],
                 "risk_level": risk_level
             })
         return inventory_status
     except Exception:
         # Fallback
         return MOCK_ITEMS
+
+@app.get("/api/finance")
+def get_finance():
+    try:
+        df = pd.read_csv(os.path.join("data", "finance.csv"))
+        finance_data = []
+        for _, row in df.iterrows():
+            finance_data.append({
+                "account_name": row["account_name"],
+                "balance_usd": row["balance_usd"]
+            })
+        return finance_data
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@app.get("/api/sales")
+def get_sales():
+    try:
+        df = pd.read_csv(os.path.join("data", "sales.csv"))
+        sales_data = []
+        for _, sale in df.iterrows():
+            sales_data.append({
+                "order_id": sale["order_id"],
+                "sku": sale["item_id"],
+                "qty": sale["qty"],
+                "status": sale["status"],
+                "due_date": sale["due_date"]
+            })
+        return sales_data
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@app.get("/api/manufacturing")
+def get_manufacturing():
+    try:
+        df = pd.read_csv(os.path.join("data", "manufacturing.csv"))
+        manufacturing_data = []
+        for _, row in df.iterrows():
+            manufacturing_data.append({
+                "work_order_id": row["work_order_id"],
+                "sku": row["item_id"],
+                "status": row["status"],
+                "pending_units": row["qty"],
+                "eta": row["eta"]
+            })
+        return manufacturing_data
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@app.get("/api/logistics")
+def get_logistics():
+    try:
+        df = pd.read_csv(os.path.join("data", "logistics.csv"))
+        logistics_data = []
+        for _, row in df.iterrows():
+            logistics_data.append({
+                "resource": row["resource"],
+                "status": row["status"],
+                "availability_date": row["availability_date"]
+            })
+        return logistics_data
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@app.get("/api/bom")
+def get_bom():
+    try:
+        df = pd.read_csv(os.path.join("data", "bom.csv"))
+        return df.to_dict(orient="records")
+    except Exception as e:
+        return {"error": str(e)}
 
 @app.post("/api/analyze")
 async def analyze_input(text: str = Form(None), file: UploadFile = File(None)):

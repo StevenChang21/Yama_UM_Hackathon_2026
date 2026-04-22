@@ -1,38 +1,40 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
 
 :root {
   /* Bosch Brand Colors */
-  --bosch-red: #E20015;
-  --bosch-dark-blue: #00284A;
-  --bosch-light-blue: #00A8CB;
-  --bosch-green: #00884A;
-  --bosch-yellow: #FFB900;
-  --bosch-gray-100: #F3F3F3;
-  --bosch-gray-200: #E0E2E5;
-  --bosch-gray-300: #BFC0C2;
-  --bosch-gray-800: #1B1E24;
+  --bosch-red: #e20015;
+  --bosch-dark-blue: #00284a;
+  --bosch-light-blue: #00a8cb;
+  --bosch-green: #00884a;
+  --bosch-yellow: #ffb900;
+  --bosch-gray-100: #f3f3f3;
+  --bosch-gray-200: #e0e2e5;
+  --bosch-gray-300: #bfc0c2;
+  --bosch-gray-800: #1b1e24;
 
   /* App Theme Variables */
-  --bg-color: #F8F9FA;
-  --surface-color: #FFFFFF;
-  --text-primary: #1B1E24;
-  --text-secondary: #5A5D64;
-  --border-color: #E0E2E5;
-  
+  --bg-color: #f8f9fa;
+  --surface-color: #ffffff;
+  --text-primary: #1b1e24;
+  --text-secondary: #5a5d64;
+  --border-color: #e0e2e5;
+
   --primary: var(--bosch-dark-blue);
   --primary-hover: #003666;
   --accent: var(--bosch-red);
-  --accent-hover: #C50012;
-  
+  --accent-hover: #c50012;
+
   --success: var(--bosch-green);
   --warning: var(--bosch-yellow);
   --danger: var(--bosch-red);
   --info: var(--bosch-light-blue);
 
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  
+  --shadow-md:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+
   --radius-sm: 0.25rem;
   --radius-md: 0.5rem;
   --radius-lg: 0.75rem;
@@ -46,14 +48,19 @@
 }
 
 body {
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
   background-color: var(--bg-color);
   color: var(--text-primary);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-weight: 600;
   line-height: 1.2;
   color: var(--text-primary);
@@ -110,7 +117,9 @@ button {
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--border-color);
   padding: 1.5rem;
-  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  transition:
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
 }
 
 .card:hover {
@@ -148,13 +157,23 @@ button {
 }
 
 @media (max-width: 1024px) {
-  .grid-cols-4 { grid-template-columns: repeat(2, 1fr); }
-  .grid-cols-3 { grid-template-columns: repeat(2, 1fr); }
+  .grid-cols-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .grid-cols-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @media (max-width: 768px) {
-  .grid-cols-4, .grid-cols-3, .grid-cols-2 { grid-template-columns: 1fr; }
-  .app-container { flex-direction: column; }
+  .grid-cols-4,
+  .grid-cols-3,
+  .grid-cols-2 {
+    grid-template-columns: 1fr;
+  }
+  .app-container {
+    flex-direction: column;
+  }
 }
 
 /* Buttons */
@@ -213,10 +232,22 @@ button {
   letter-spacing: 0.05em;
 }
 
-.badge-success { background-color: #E6F3EC; color: var(--bosch-green); }
-.badge-warning { background-color: #FFF8E6; color: #B38200; }
-.badge-danger { background-color: #FCE6E8; color: var(--bosch-red); }
-.badge-info { background-color: #E6F6F9; color: #00768F; }
+.badge-success {
+  background-color: #e6f3ec;
+  color: var(--bosch-green);
+}
+.badge-warning {
+  background-color: #fff8e6;
+  color: #b38200;
+}
+.badge-danger {
+  background-color: #fce6e8;
+  color: var(--bosch-red);
+}
+.badge-info {
+  background-color: #e6f6f9;
+  color: #00768f;
+}
 
 /* Table */
 .table-wrapper {
@@ -230,7 +261,8 @@ button {
   text-align: left;
 }
 
-.table th, .table td {
+.table th,
+.table td {
   padding: 1rem;
   border-bottom: 1px solid var(--border-color);
 }
@@ -245,7 +277,7 @@ button {
 }
 
 .table tr:hover td {
-  background-color: #F8F9FA;
+  background-color: #f8f9fa;
 }
 
 /* Forms */
@@ -268,15 +300,17 @@ button {
   border-radius: var(--radius-sm);
   font-size: 1rem;
   font-family: inherit;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-  background-color: #FAFAFA;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+  background-color: #fafafa;
 }
 
 .form-control:focus {
   outline: none;
   border-color: var(--bosch-light-blue);
   box-shadow: 0 0 0 3px rgba(0, 168, 203, 0.1);
-  background-color: #FFF;
+  background-color: #fff;
 }
 
 textarea.form-control {

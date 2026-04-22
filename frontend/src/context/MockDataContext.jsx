@@ -1,68 +1,130 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useState, useEffect } from "react";
 
+// central data provider for the whole web app
 const MockDataContext = createContext();
 
-export const useMockData = () => useContext(MockDataContext);
+function transformInventory(data) {
+  return {
+    rawMaterials: data
+      .filter((item) => item.id.startsWith("RAW"))
+      .map((item) => ({
+        id: item.id,
+        name: item.name,
+        quantity: item.current_stock,
+        threshold: item.reorder_point,
+        leadTime: item.supplier_lead_time_days,
+        costPerUnit: item.cost_per_unit,
+        status:
+          item.risk_level === "High"
+            ? "critical"
+            : item.risk_level === "Medium"
+            ? "low"
+            : "safe",
+              })),
+
+    finishedGoods: data
+      .filter((item) => item.id.startsWith("SKU"))
+      .map((item) => ({
+        id: item.id,
+        name: item.name,
+        quantity: item.current_stock,
+        threshold: item.reorder_point,
+        leadTime: item.supplier_lead_time_days,
+        costPerUnit: item.cost_per_unit,
+        status:
+          item.risk_level === "High"
+            ? "critical"
+            : item.risk_level === "Medium"
+            ? "low"
+            : "safe",
+              })),
+          };
+}
 
 export const MockDataProvider = ({ children }) => {
-  // Initial Mock State
   const [inventory, setInventory] = useState({
-    rawMaterials: [
-      { id: 'RM001', name: 'Steel Sheets', quantity: 450, unit: 'kg', threshold: 500, status: 'low' },
-      { id: 'RM002', name: 'Microcontrollers', quantity: 1200, unit: 'pcs', threshold: 300, status: 'safe' },
-      { id: 'RM003', name: 'Plastic Casings', quantity: 150, unit: 'pcs', threshold: 200, status: 'critical' },
-      { id: 'RM004', name: 'Copper Wire', quantity: 850, unit: 'm', threshold: 500, status: 'safe' },
-    ],
-    finishedGoods: [
-      { id: 'FG001', name: 'Bosch Smart Drill', quantity: 85, unit: 'pcs', threshold: 100, status: 'low' },
-      { id: 'FG002', name: 'Robotic Lawnmower', quantity: 45, unit: 'pcs', threshold: 30, status: 'safe' },
-      { id: 'FG003', name: 'Sensor Module X', quantity: 500, unit: 'pcs', threshold: 400, status: 'safe' },
-    ]
+    rawMaterials: [],
+    finishedGoods: [],
   });
 
   const [inputs, setInputs] = useState({
-    demandForecast: 150, // units needed next month
-    productionCapacity: 200, // units can be produced
-    budget: 50000,
-    salesNotes: 'Expecting high demand for Smart Drills next quarter.',
-    supplierNotes: 'Supplier A is delayed by 2 weeks.',
-    logisticsNotes: 'Standard shipping only.'
+    demandForecast: 0,
+    productionCapacity: 0,
+    budget: 0,
+    salesNotes: "",
+    supplierNotes: "",
+    logisticsNotes: "",
   });
 
   const [recommendation, setRecommendation] = useState(null);
   const [history, setHistory] = useState([]);
+  const [bom, setBom] = useState([]);
+  const [sales, setSales] = useState([]);
+  const [manufacturing, setManufacturing] = useState([]);
 
-  // Mock AI Logic to generate recommendation based on inputs and inventory
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [bomRes, finRes, invRes, logRes, manRes, salRes] = await Promise.all([
+          fetch("http://localhost:8000/api/bom"),
+          fetch("http://localhost:8000/api/finance"),
+          fetch("http://localhost:8000/api/inventory"),
+          fetch("http://localhost:8000/api/logistics"),
+          fetch("http://localhost:8000/api/manufacturing"),
+          fetch("http://localhost:8000/api/sales")
+        ]);
+        
+        const invData = await invRes.json();
+        const finData = await finRes.json();
+        const bomData = await bomRes.json();
+        const logData = await logRes.json();
+        const manData = await manRes.json();
+        const salData = await salRes.json();
+    
+        const transformed = transformInventory(invData);
+        setInventory(transformed);
+        setBom(bomData);
+        setSales(salData);
+        setManufacturing(manData);
+
+        if (Array.isArray(finData)) {
+          const opCash = finData.find(item => item.account_name === "Operating Cash");
+          if (opCash) {
+            setInputs(prev => ({ ...prev, budget: opCash.balance_usd }));
+          }
+        }
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchData();
+  }, []);
+
   const generateRecommendation = (newInputs) => {
-    // Basic logic
-    const drillStock = inventory.finishedGoods.find(item => item.id === 'FG001').quantity;
-    const steelStock = inventory.rawMaterials.find(item => item.id === 'RM001').quantity;
-    
+    const drillStock =
+      inventory.finishedGoods.find((item) => item.id === "SKU-A")?.quantity ||
+      0;
     const needsRestock = drillStock < newInputs.demandForecast;
-    const shortfall = Math.max(0, newInputs.demandForecast - drillStock);
-    const recommendedProduction = Math.min(shortfall * 1.2, newInputs.productionCapacity); // buffer of 20%
-    
-    const steelNeeded = recommendedProduction * 2.5; // 2.5kg per drill
-    const needsRawMaterial = steelStock < steelNeeded;
 
     const newRec = {
       timestamp: new Date().toISOString(),
-      decision: needsRestock ? 'RESTOCK & PRODUCE' : 'MAINTAIN STOCK',
-      recommendedQuantity: Math.round(recommendedProduction),
-      rawMaterialsNeeded: needsRawMaterial ? [
-        { name: 'Steel Sheets', quantity: Math.round(steelNeeded - steelStock), unit: 'kg' }
-      ] : [],
-      supplier: needsRawMaterial ? 'Bosch Preferred Supplier B (Fast Track)' : 'N/A',
-      transport: needsRawMaterial ? 'Air Freight (Expedited)' : 'Standard',
-      estimatedCost: needsRawMaterial ? Math.round((steelNeeded - steelStock) * 15 + 500) : 0, // mock cost logic
-      explanation: needsRestock 
-        ? `Demand forecast (${newInputs.demandForecast}) exceeds current stock (${drillStock}). Initiating production. ` + 
-          (needsRawMaterial ? `Raw materials (Steel) are insufficient. Expedited delivery selected due to supplier delays noted.` : `Sufficient raw materials on hand.`)
-        : `Current stock (${drillStock}) is sufficient to meet forecasted demand (${newInputs.demandForecast}). No immediate action required.`
+      decision: needsRestock ? "RESTOCK & PRODUCE" : "MAINTAIN STOCK",
+      recommendedQuantity: Math.max(0, newInputs.demandForecast - drillStock),
+      rawMaterialsNeeded: [],
+      supplier: "Bosch Standard Suppliers",
+      transport: needsRestock ? "Air Freight" : "Standard",
+      estimatedCost: 500,
+      explanation: `Based on demand forecast of ${newInputs.demandForecast} and current stock of ${drillStock}.`,
     };
 
     setRecommendation(newRec);
-    setHistory(prev => [newRec, ...prev]);
+    setHistory((prev) => [newRec, ...prev]);
   };
 
   const updateInputs = (newInputs) => {
@@ -71,8 +133,23 @@ export const MockDataProvider = ({ children }) => {
   };
 
   return (
-    <MockDataContext.Provider value={{ inventory, inputs, updateInputs, recommendation, history }}>
+    <MockDataContext.Provider
+      value={{
+        inventory,
+        loading,
+        error,
+        inputs,
+        updateInputs,
+        recommendation,
+        history,
+        bom,
+        sales,
+        manufacturing,
+      }}
+    >
       {children}
     </MockDataContext.Provider>
   );
 };
+
+export { MockDataContext };

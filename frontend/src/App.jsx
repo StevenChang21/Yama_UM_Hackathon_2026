@@ -1,14 +1,19 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Sidebar from './components/Sidebar';
-import Dashboard from './pages/Dashboard';
-import Inventory from './pages/Inventory';
-import Inputs from './pages/Inputs';
-import Recommendations from './pages/Recommendations';
-import History from './pages/History';
-import Suppliers from './pages/Suppliers';
-import { MockDataProvider } from './context/MockDataContext';
-import './index.css';
+import React from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import Sidebar from "./components/Sidebar";
+import Dashboard from "./pages/Dashboard";
+import Inventory from "./pages/Inventory";
+import Inputs from "./pages/Inputs";
+import Recommendations from "./pages/Recommendations";
+import History from "./pages/History";
+import Suppliers from "./pages/Suppliers";
+import { MockDataProvider } from "./context/MockDataContext";
+import "./index.css";
 
 function App() {
   return (
