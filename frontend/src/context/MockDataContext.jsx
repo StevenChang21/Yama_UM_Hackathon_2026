@@ -1,6 +1,5 @@
 import React, { createContext, useState, useEffect, useRef } from "react";
 
-// central data provider for the whole web app
 const MockDataContext = createContext();
 
 function transformInventory(data) {
@@ -18,10 +17,9 @@ function transformInventory(data) {
           item.risk_level === "High"
             ? "critical"
             : item.risk_level === "Medium"
-            ? "low"
-            : "safe",
-              })),
-
+              ? "low"
+              : "safe",
+      })),
     finishedGoods: data
       .filter((item) => item.id.startsWith("SKU"))
       .map((item) => ({
@@ -35,18 +33,14 @@ function transformInventory(data) {
           item.risk_level === "High"
             ? "critical"
             : item.risk_level === "Medium"
-            ? "low"
-            : "safe",
-              })),
-          };
+              ? "low"
+              : "safe",
+      })),
+  };
 }
 
 export const MockDataProvider = ({ children }) => {
-  const [inventory, setInventory] = useState({
-    rawMaterials: [],
-    finishedGoods: [],
-  });
-
+  const [inventory, setInventory] = useState({ rawMaterials: [], finishedGoods: [] });
   const [inputs, setInputs] = useState({
     demandForecast: 0,
     productionCapacity: 0,
@@ -55,53 +49,47 @@ export const MockDataProvider = ({ children }) => {
     supplierNotes: "",
     logisticsNotes: "",
   });
-
   const [recommendation, setRecommendation] = useState(null);
   const [history, setHistory] = useState([]);
   const [bom, setBom] = useState([]);
   const [sales, setSales] = useState([]);
   const [manufacturing, setManufacturing] = useState([]);
-
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  // New state for AI orchestrator WebSocket
   const [aiStatus, setAiStatus] = useState("");
   const [isAILoading, setIsAILoading] = useState(false);
 
   const [emailAlerts, setEmailAlerts] = useState([]);
   const lastAlertCountRef = useRef(0);
 
+  // The snapshot timestamp the AI will use when querying data
+  const [analysisAsOfDate, setAnalysisAsOfDate] = useState("2026-04-23 08:00");
+
   useEffect(() => {
     async function fetchData() {
       try {
-        const [bomRes, finRes, invRes, logRes, manRes, salRes] = await Promise.all([
+        const [bomRes, finRes, invRes, , manRes, salRes] = await Promise.all([
           fetch("http://localhost:8000/api/bom"),
           fetch("http://localhost:8000/api/finance"),
           fetch("http://localhost:8000/api/inventory"),
           fetch("http://localhost:8000/api/logistics"),
           fetch("http://localhost:8000/api/manufacturing"),
-          fetch("http://localhost:8000/api/sales")
+          fetch("http://localhost:8000/api/sales"),
         ]);
-        
         const invData = await invRes.json();
         const finData = await finRes.json();
         const bomData = await bomRes.json();
-        const logData = await logRes.json();
-        const manData = await manRes.json();
         const salData = await salRes.json();
-    
-        const transformed = transformInventory(invData);
-        setInventory(transformed);
+        const manData = await manRes.json();
+
+        setInventory(transformInventory(invData));
         setBom(bomData);
         setSales(salData);
         setManufacturing(manData);
 
         if (Array.isArray(finData)) {
-          const opCash = finData.find(item => item.account_name === "Operating Cash");
-          if (opCash) {
-            setInputs(prev => ({ ...prev, budget: opCash.balance_usd }));
-          }
+          const opCash = finData.find((item) => item.account_name === "Operating Cash");
+          if (opCash) setInputs((prev) => ({ ...prev, budget: opCash.balance_usd }));
         }
       } catch (err) {
         setError(err.message);
@@ -109,34 +97,11 @@ export const MockDataProvider = ({ children }) => {
         setLoading(false);
       }
     }
-
     fetchData();
   }, []);
 
-  const generateRecommendation = (newInputs) => {
-    const drillStock =
-      inventory.finishedGoods.find((item) => item.id === "SKU-A")?.quantity ||
-      0;
-    const needsRestock = drillStock < newInputs.demandForecast;
-
-    const newRec = {
-      timestamp: new Date().toISOString(),
-      decision: needsRestock ? "RESTOCK & PRODUCE" : "MAINTAIN STOCK",
-      recommendedQuantity: Math.max(0, newInputs.demandForecast - drillStock),
-      rawMaterialsNeeded: [],
-      supplier: "Bosch Standard Suppliers",
-      transport: needsRestock ? "Air Freight" : "Standard",
-      estimatedCost: 500,
-      explanation: `Based on demand forecast of ${newInputs.demandForecast} and current stock of ${drillStock}.`,
-    };
-
-    setRecommendation(newRec);
-    setHistory((prev) => [newRec, ...prev]);
-  };
-
   const updateInputs = (newInputs) => {
     setInputs(newInputs);
-    // Removed automatic mock recommendation generation
   };
 
   const generateAIRecommendation = (inputText) => {
@@ -144,44 +109,85 @@ export const MockDataProvider = ({ children }) => {
     setAiStatus("Connecting to Agent...");
     setError(null);
 
-    const ws = new WebSocket("ws://localhost:8000/ws/orchestrator");
+    let didReceiveResult = false;
+    let ws;
+
+    const connectionTimeout = setTimeout(() => {
+      if (!didReceiveResult) {
+        setError("Connection timed out. Make sure the backend server is running on localhost:8000.");
+        setIsAILoading(false);
+        try { ws.close(); } catch (_) { }
+      }
+    }, 15000);
+
+    try {
+      ws = new WebSocket("ws://localhost:8000/ws/orchestrator");
+    } catch (err) {
+      clearTimeout(connectionTimeout);
+      setError("Failed to create WebSocket connection. Is the backend server running?");
+      setIsAILoading(false);
+      return;
+    }
 
     ws.onopen = () => {
-      ws.send(inputText);
+      clearTimeout(connectionTimeout);
+      setAiStatus("Connected. Sending input to Z.AI...");
+      // Send JSON envelope so the backend knows which time snapshot to use
+      ws.send(JSON.stringify({ prompt: inputText, as_of_date: analysisAsOfDate }));
     };
 
     ws.onmessage = (event) => {
-      const response = JSON.parse(event.data);
+      let response;
+      try {
+        response = JSON.parse(event.data);
+      } catch (parseErr) {
+        setError("Received invalid response from server.");
+        setIsAILoading(false);
+        ws.close();
+        return;
+      }
+
       if (response.type === "status") {
         setAiStatus(response.message);
       } else if (response.type === "result") {
+        didReceiveResult = true;
         const newRec = {
           timestamp: new Date().toISOString(),
+          asOfDate: analysisAsOfDate,
           decision: response.data.recommended_quantity > 0 ? "RESTOCK & PRODUCE" : "MAINTAIN STOCK",
           recommendedQuantity: response.data.recommended_quantity,
-          rawMaterialsNeeded: response.data.chosen_raw_materials ? [{ name: response.data.chosen_raw_materials, quantity: response.data.recommended_quantity, unit: "units" }] : [],
+          rawMaterialsNeeded: response.data.chosen_raw_materials
+            ? [{ name: response.data.chosen_raw_materials, quantity: response.data.recommended_quantity, unit: "units" }]
+            : [],
           supplier: response.data.chosen_supplier || "N/A",
           transport: "Standard",
           estimatedCost: response.data.estimated_cost || 0,
           explanation: response.data.justification,
           estimatedDeliveryDate: response.data.estimated_delivery_date,
-          drafts: response.data.drafts || {}
+          drafts: response.data.drafts || {},
         };
         setRecommendation(newRec);
         setHistory((prev) => [newRec, ...prev]);
         setIsAILoading(false);
         ws.close();
       } else if (response.type === "error") {
-        setError(response.message);
+        setError(response.message || "An error occurred during orchestration.");
         setIsAILoading(false);
         ws.close();
       }
     };
 
-    ws.onerror = (err) => {
-      setError("WebSocket connection failed.");
-      setIsAILoading(false);
-      ws.close();
+    ws.onerror = () => {
+      clearTimeout(connectionTimeout);
+      if (!didReceiveResult) {
+        setError("WebSocket connection failed. Make sure the backend server is running (uvicorn main:app --reload).");
+        setIsAILoading(false);
+      }
+    };
+
+    ws.onclose = () => {
+      clearTimeout(connectionTimeout);
+      if (!didReceiveResult) setIsAILoading(false);
     };
   };
 
@@ -193,12 +199,12 @@ export const MockDataProvider = ({ children }) => {
       try {
         const res = await fetch("http://localhost:8000/api/emails/alerts");
         const alerts = await res.json();
-        
+
         if (alerts && Array.isArray(alerts) && alerts.length > lastAlertCountRef.current) {
           console.log(`[Email Poller] New emails detected! Previous count: ${lastAlertCountRef.current}, New count: ${alerts.length}`);
           lastAlertCountRef.current = alerts.length;
           setEmailAlerts(alerts);
-          
+
           // Auto-trigger the AI to analyze the new situation
           generateAIRecommendation(
             "New emails have arrived in the inbox. Please check them using get_unread_emails and update your recommendations based on the latest supply chain context."
@@ -232,6 +238,8 @@ export const MockDataProvider = ({ children }) => {
         manufacturing,
         aiStatus,
         isAILoading,
+        analysisAsOfDate,
+        setAnalysisAsOfDate,
         generateAIRecommendation,
         emailAlerts,
       }}

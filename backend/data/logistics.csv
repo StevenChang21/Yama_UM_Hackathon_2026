@@ -1,3 +1,10 @@
-resource,status,availability_date
-Warehouse Rack Space,Available,Now
-Truck Fleet,Busy,2026-04-25
+resource,status,availability_date,notes,valid_from
+Receiving Dock A,Available,Now,Fully operational,2026-04-14 00:00
+Receiving Dock B,Available,Now,Limited to pallets under 500kg,2026-04-14 00:00
+Truck Fleet A (3 trucks),Available,Now,Available for local deliveries,2026-04-14 00:00
+Forklift Unit 3,Available,Now,,2026-04-14 00:00
+Warehouse Floor Space (Bay 4-6),Available,Now,Approx. 600 sqm free,2026-04-14 00:00
+Cold Storage B,Available,Now,Available,2026-04-14 00:00
+Receiving Dock A,Under Maintenance,2026-04-25,Scheduled repair - no inbound deliveries until Apr 25,2026-04-21 08:00
+Truck Fleet A (3 trucks),Busy - Penang Delivery Run,2026-04-27,Delivering finished goods to AutoParts Corp,2026-04-22 13:00
+Cold Storage B,Occupied,2026-05-03,SKU-A finished goods batch awaiting QC clearance,2026-04-23 08:00

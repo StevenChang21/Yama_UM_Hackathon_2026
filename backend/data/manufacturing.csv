@@ -1,2 +1,9 @@
-work_order_id,item_id,status,qty,eta
-WO-001,SKU-A,In Progress,100,2026-04-22
+work_order_id,item_id,status,qty,eta,notes,valid_from
+WO-001,SKU-A,In Progress,80,2026-04-26,Started production Apr 14. Consuming RAW-001 and RAW-004.,2026-04-14 09:15
+WO-003,SKU-B,Planned,200,2026-04-30,Planned for ORD-102. RAW-001 allocated to WO-001 first.,2026-04-14 09:15
+WO-002,SKU-C,Planned,120,2026-04-28,Scheduled after ORD-104 confirmed,2026-04-16 14:30
+WO-002,SKU-C,In Progress - Slowed,120,TBD,Slowed due to RAW-003 availability concerns.,2026-04-21 08:00
+WO-003,SKU-B,Blocked - Awaiting RAW-001,0,TBD,Cannot start. RAW-001 fully allocated to WO-001.,2026-04-21 08:00
+WO-004,SKU-D,Planned,100,2026-05-02,Planned for ORD-103. Requires RAW-002 and RAW-003.,2026-04-22 13:00
+WO-002,SKU-C,Halted - RAW-003 Exhausted,50,TBD,Stopped at 50/120 units when RAW-003 ran out.,2026-04-23 08:00
+WO-004,SKU-D,Not Started - Awaiting Materials,0,TBD,Both RAW-002 and RAW-003 below threshold.,2026-04-23 08:00
