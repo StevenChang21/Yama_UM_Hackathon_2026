@@ -2,8 +2,11 @@ import React, { useState } from "react";
 import { useMockData } from "../context/useMockData";
 import { FileEdit, Save } from "lucide-react";
 import AlertBanner from "../components/AlertBanner";
+import { useNavigate } from "react-router-dom";
+
 const Inputs = () => {
-  const { inputs, updateInputs } = useMockData();
+  const { inputs, updateInputs, generateAIRecommendation } = useMockData();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState(inputs);
   const [showSuccess, setShowSuccess] = useState(false);
   const handleChange = (e) => {
@@ -16,8 +19,24 @@ const Inputs = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     updateInputs(formData);
+    
+    // Construct an unstructured text prompt for the AI Orchestrator
+    const promptText = `Please analyze our supply chain. 
+Our current demand forecast is ${formData.demandForecast} units. 
+Production capacity is ${formData.productionCapacity} units/month. 
+Our budget is $${formData.budget}.
+Sales Notes: ${formData.salesNotes}
+Supplier Notes: ${formData.supplierNotes}
+Logistics Notes: ${formData.logisticsNotes}
+What is your recommendation?`;
+
+    generateAIRecommendation(promptText);
+    
     setShowSuccess(true);
-    setTimeout(() => setShowSuccess(false), 3000);
+    setTimeout(() => {
+      setShowSuccess(false);
+      navigate("/recommendations");
+    }, 1500);
   };
   return (
     <div>
