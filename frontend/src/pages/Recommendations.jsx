@@ -1,4 +1,3 @@
-import React, { useEffect } from "react";
 import { useMockData } from "../context/useMockData";
 import {
   Lightbulb,
@@ -12,7 +11,7 @@ import {
 import AlertBanner from "../components/AlertBanner";
 
 const Recommendations = () => {
-  const { recommendation, isAILoading, aiStatus } = useMockData();
+  const { recommendation, isAILoading, aiStatus, error } = useMockData();
 
   if (isAILoading) {
     return (
@@ -35,6 +34,29 @@ const Recommendations = () => {
     );
   }
 
+  if (error) {
+    return (
+      <div>
+        <header className="page-header">
+          <h1 className="page-title">AI Recommendations</h1>
+          <p className="page-subtitle">
+            Something went wrong during orchestration.
+          </p>
+        </header>
+        <AlertBanner
+          type="danger"
+          title="Connection Error"
+          message={error}
+        />
+        <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
+          <a href="/inputs" className="btn btn-primary" style={{ textDecoration: "none" }}>
+            ← Back to Inputs
+          </a>
+        </div>
+      </div>
+    );
+  }
+
   if (!recommendation) {
     return (
       <div>
@@ -44,7 +66,12 @@ const Recommendations = () => {
             Actionable insights based on your planning inputs.
           </p>
         </header>
-        <AlertBanner type="info" message="Loading recommendations..." />
+        <AlertBanner type="info" title="No Recommendation Yet" message="Go to the Planning Inputs page to fill in your data and generate a recommendation." />
+        <div style={{ marginTop: "1rem" }}>
+          <a href="/inputs" className="btn btn-primary" style={{ textDecoration: "none" }}>
+            Go to Inputs
+          </a>
+        </div>
       </div>
     );
   }
@@ -94,14 +121,22 @@ const Recommendations = () => {
             </h2>
           </div>
           <div style={{ textAlign: "right" }}>
-            <div
-              style={{ fontSize: "0.875rem", color: "var(--text-secondary)" }}
-            >
+            <div style={{ fontSize: "0.875rem", color: "var(--text-secondary)" }}>
               Generated at
             </div>
             <div style={{ fontWeight: 500 }}>
               {new Date(recommendation.timestamp).toLocaleString()}
             </div>
+            {recommendation.asOfDate && (
+              <>
+                <div style={{ fontSize: "0.875rem", color: "var(--text-secondary)", marginTop: "0.5rem" }}>
+                  Data as of
+                </div>
+                <div style={{ fontWeight: 600, color: "var(--bosch-light-blue)" }}>
+                  {recommendation.asOfDate}
+                </div>
+              </>
+            )}
           </div>
         </div>
 
