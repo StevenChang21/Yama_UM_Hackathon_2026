@@ -65,6 +65,10 @@ export const MockDataProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // New state for AI orchestrator WebSocket
+  const [aiStatus, setAiStatus] = useState("");
+  const [isAILoading, setIsAILoading] = useState(false);
+
   useEffect(() => {
     async function fetchData() {
       try {
@@ -129,7 +133,53 @@ export const MockDataProvider = ({ children }) => {
 
   const updateInputs = (newInputs) => {
     setInputs(newInputs);
-    generateRecommendation(newInputs);
+    // Removed automatic mock recommendation generation
+  };
+
+  const generateAIRecommendation = (inputText) => {
+    setIsAILoading(true);
+    setAiStatus("Connecting to Agent...");
+    setError(null);
+
+    const ws = new WebSocket("ws://localhost:8000/ws/orchestrator");
+
+    ws.onopen = () => {
+      ws.send(inputText);
+    };
+
+    ws.onmessage = (event) => {
+      const response = JSON.parse(event.data);
+      if (response.type === "status") {
+        setAiStatus(response.message);
+      } else if (response.type === "result") {
+        const newRec = {
+          timestamp: new Date().toISOString(),
+          decision: response.data.recommended_quantity > 0 ? "RESTOCK & PRODUCE" : "MAINTAIN STOCK",
+          recommendedQuantity: response.data.recommended_quantity,
+          rawMaterialsNeeded: response.data.chosen_raw_materials ? [{ name: response.data.chosen_raw_materials, quantity: response.data.recommended_quantity, unit: "units" }] : [],
+          supplier: response.data.chosen_supplier || "N/A",
+          transport: "Standard",
+          estimatedCost: response.data.estimated_cost || 0,
+          explanation: response.data.justification,
+          estimatedDeliveryDate: response.data.estimated_delivery_date,
+          drafts: response.data.drafts || {}
+        };
+        setRecommendation(newRec);
+        setHistory((prev) => [newRec, ...prev]);
+        setIsAILoading(false);
+        ws.close();
+      } else if (response.type === "error") {
+        setError(response.message);
+        setIsAILoading(false);
+        ws.close();
+      }
+    };
+
+    ws.onerror = (err) => {
+      setError("WebSocket connection failed.");
+      setIsAILoading(false);
+      ws.close();
+    };
   };
 
   return (
@@ -145,6 +195,9 @@ export const MockDataProvider = ({ children }) => {
         bom,
         sales,
         manufacturing,
+        aiStatus,
+        isAILoading,
+        generateAIRecommendation,
       }}
     >
       {children}

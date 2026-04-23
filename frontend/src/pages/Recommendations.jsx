@@ -6,17 +6,34 @@ import {
   PackageCheck,
   Truck,
   DollarSign,
+  FileText,
+  Calendar
 } from "lucide-react";
 import AlertBanner from "../components/AlertBanner";
 
 const Recommendations = () => {
-  const { recommendation, inputs, updateInputs } = useMockData();
+  const { recommendation, isAILoading, aiStatus } = useMockData();
 
-  useEffect(() => {
-    if (!recommendation) {
-      updateInputs(inputs);
-    }
-  }, [recommendation, inputs, updateInputs]);
+  if (isAILoading) {
+    return (
+      <div>
+        <header className="page-header">
+          <h1 className="page-title">AI Orchestrator</h1>
+          <p className="page-subtitle">
+            Agentic workflow in progress...
+          </p>
+        </header>
+        <div className="card" style={{ textAlign: "center", padding: "4rem" }}>
+           <div className="spinner" style={{ margin: "0 auto 1rem auto", width: "40px", height: "40px", border: "4px solid #f3f3f3", borderTop: "4px solid var(--bosch-light-blue)", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
+           <style>{`
+             @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+           `}</style>
+           <h3>Z.AI is analyzing your supply chain</h3>
+           <p style={{ color: "var(--bosch-light-blue)", fontWeight: "bold" }}>{aiStatus}</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!recommendation) {
     return (
@@ -143,9 +160,10 @@ const Recommendations = () => {
               {recommendation.supplier}
             </div>
             <div
-              style={{ fontSize: "0.875rem", color: "var(--text-secondary)" }}
+              style={{ fontSize: "0.875rem", color: "var(--text-secondary)", marginTop: "0.5rem" }}
             >
-              {recommendation.transport}
+              <Calendar size={14} style={{ display: "inline", verticalAlign: "middle", marginRight: "4px" }} />
+              Delivery: {recommendation.estimatedDeliveryDate || "TBD"}
             </div>
           </div>
 
@@ -195,6 +213,27 @@ const Recommendations = () => {
             )}
           </div>
         </div>
+        
+        {/* Render drafts if they exist */}
+        {recommendation.drafts && Object.keys(recommendation.drafts).length > 0 && (
+          <div style={{ marginTop: "2rem" }}>
+            <h4 style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <FileText size={20} color="var(--bosch-light-blue)" /> Generated Drafts
+            </h4>
+            <div className="grid-cols-2" style={{ gap: "1rem" }}>
+              {Object.entries(recommendation.drafts).map(([key, content]) => (
+                <div key={key} className="card" style={{ backgroundColor: "#F8F9FA", border: "1px solid var(--border-color)", boxShadow: "none" }}>
+                  <div className="card-title" style={{ textTransform: "capitalize", fontSize: "1rem", color: "var(--bosch-dark-blue)" }}>
+                    {key.replace("_", " ")}
+                  </div>
+                  <pre style={{ whiteSpace: "pre-wrap", fontSize: "0.875rem", fontFamily: "inherit", color: "var(--text-primary)", margin: 0 }}>
+                    {content}
+                  </pre>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

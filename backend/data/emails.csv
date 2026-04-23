@@ -1,0 +1,3 @@
+id,sender,subject,date,body
+MSG-001,sales@yamatech.com,URGENT: Big order from Client X,2026-04-21,"Hey Raj, we just closed a massive deal with Client X. They need 700 units of SKU-A and 300 units of SKU-B shipped by next Friday. I promised we can do it. Can you confirm we have enough Raw Material Y to make this happen?"
+MSG-002,supplier_alpha@globalmaterials.com,Delay on recent PO,2026-04-20,"Dear Inventory Team, apologies but our shipping container is delayed. The 500 units of Raw Material Z you ordered won't arrive until May 5th."
