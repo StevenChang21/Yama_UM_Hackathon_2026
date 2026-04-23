@@ -202,10 +202,10 @@ def _build_tool_registry(data_repo: DataRepository) -> ToolRegistry:
     return registry
 
 
-def create_orchestrator() -> Orchestrator:
+def create_orchestrator(as_of_date: Optional[str] = None) -> Orchestrator:
     """Factory: builds a fully configured Orchestrator with all dependencies wired up."""
     data_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
-    data_repo = DataRepository(data_dir)
+    data_repo = DataRepository(data_dir, as_of_date=as_of_date)
     tool_registry = _build_tool_registry(data_repo)
 
     ilmu_api_key = os.environ.get("ILMU_API_KEY")
@@ -214,11 +214,11 @@ def create_orchestrator() -> Orchestrator:
     return Orchestrator(llm_client=llm_client, tool_registry=tool_registry)
 
 
-async def process_orchestration(ws, input_text: str) -> None:
+async def process_orchestration(ws, input_text: str, as_of_date: Optional[str] = None) -> None:
     """
     Backward-compatible entry point — main.py imports this function.
     Creates the orchestrator, wires up a WebSocket reporter, and runs.
     """
-    orchestrator = create_orchestrator()
+    orchestrator = create_orchestrator(as_of_date=as_of_date)
     reporter = WebSocketReporter(ws)
     await orchestrator.run(reporter, input_text)
