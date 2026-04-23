@@ -1,12 +1,19 @@
 import os
 import json
 import pandas as pd
-from zhipuai import ZhipuAI
+from dotenv import load_dotenv
+from openai import OpenAI
 import asyncio
 
-# Setup API Key (User should set ZHIPUAI_API_KEY environment variable)
-api_key = os.environ.get("ZHIPUAI_API_KEY", "your_zhipu_api_key_here")
-client = ZhipuAI(api_key=api_key)
+# Load .env file
+load_dotenv()
+
+# Setup API Key (User should set ILMU_API_KEY in backend/.env)
+api_key = os.environ.get("ILMU_API_KEY", "")
+client = OpenAI(
+    api_key=api_key,
+    base_url="https://api.ilmu.ai/v1",
+)
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 
@@ -130,11 +137,11 @@ async def process_orchestration(ws, input_text):
 
     while step < max_steps:
         step += 1
-        await ws.send_json({"type": "status", "message": f"Step {step}: Reasoning / Requesting GLM Generation..."})
+        await ws.send_json({"type": "status", "message": f"Step {step}: Reasoning / Requesting ILMU Generation..."})
         
-        # If the API key is exactly "your_zhipu_api_key_here", we should use a mock response flow to not crash the hackathon demo
-        if api_key == "your_zhipu_api_key_here":
-             await ws.send_json({"type": "status", "message": "Z.AI API Key missing. Simulating mock reasoning flow..."})
+        # If the API key is empty, we should use a mock response flow to not crash the hackathon demo
+        if not api_key:
+             await ws.send_json({"type": "status", "message": "ILMU API Key missing. Simulating mock reasoning flow..."})
              await asyncio.sleep(1)
              await ws.send_json({"type": "status", "message": "Calling get_inventory_data..."})
              await asyncio.sleep(1)
@@ -162,7 +169,7 @@ async def process_orchestration(ws, input_text):
         # Real API call
         try:
             response = client.chat.completions.create(
-                model="glm-4",
+                model="nemo-super",
                 messages=messages,
                 tools=tools,
             )
@@ -215,7 +222,7 @@ async def process_orchestration(ws, input_text):
                 await ws.send_json({"type": "result", "data": result_json})
                 return
             except json.JSONDecodeError:
-                await ws.send_json({"type": "error", "message": "Failed to parse GLM output as JSON.", "raw_output": message.content})
+                await ws.send_json({"type": "error", "message": "Failed to parse ILMU output as JSON.", "raw_output": message.content})
                 return
 
     await ws.send_json({"type": "error", "message": "Max reasoning steps reached."})

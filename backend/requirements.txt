@@ -6,4 +6,6 @@ xgboost
 prophet
 python-multipart
 zhipuai
+openai
 websockets
+python-dotenv
