@@ -46,5 +46,6 @@ class DataRepository:
         return self.read_csv("logistics.csv")
 
     def get_unread_emails(self) -> list[dict]:
-        """Get unread emails from the inbox."""
-        return self.read_csv("emails.csv")
+        """Get unread emails and supply chain alerts from the live inbox."""
+        from email_reader import get_all_alerts
+        return get_all_alerts()

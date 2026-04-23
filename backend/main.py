@@ -1,12 +1,29 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
 import pandas as pd
 from datetime import datetime, timedelta
+import asyncio
 import random
 import os
 from orchestrator import process_orchestration
+from email_reader import (
+    email_poll_loop,
+    process_emails,
+    get_all_alerts,
+    clear_alerts,
+)
 
-app = FastAPI(title="AI Inventory Replenishment API")
+# Start the email poll loop as a background task when the app starts
+@asynccontextmanager
+async def lifespan(app):
+    # Startup: launch email polling background task
+    task = asyncio.create_task(email_poll_loop())
+    yield
+    # Shutdown: cancel the background task
+    task.cancel()
+
+app = FastAPI(title="AI Inventory Replenishment API", lifespan=lifespan)
 
 # Setup CORS for the frontend
 app.add_middleware(
@@ -127,6 +144,32 @@ def get_bom():
         return df.to_dict(orient="records")
     except Exception as e:
         return {"error": str(e)}
+
+# ── Email Alert Endpoints ─────────────────────────────────────
+
+@app.get("/api/emails/alerts")
+def get_email_alerts():
+    """Get all email-based supply chain alerts (newest first)."""
+    return get_all_alerts()
+
+
+@app.post("/api/emails/check")
+async def trigger_email_check():
+    """Manually trigger an email check (doesn't wait for the 10-min poll)."""
+    new_alerts = await asyncio.to_thread(process_emails)
+    return {
+        "status": "checked",
+        "new_alerts_found": len(new_alerts),
+        "alerts": new_alerts,
+    }
+
+
+@app.delete("/api/emails/alerts")
+def delete_email_alerts():
+    """Clear all stored email alerts."""
+    clear_alerts()
+    return {"status": "cleared"}
+
 
 @app.post("/api/analyze")
 async def analyze_input(text: str = Form(None), file: UploadFile = File(None)):

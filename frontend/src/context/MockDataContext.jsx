@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect } from "react";
+import React, { createContext, useState, useEffect, useRef } from "react";
 
 // central data provider for the whole web app
 const MockDataContext = createContext();
@@ -68,6 +68,9 @@ export const MockDataProvider = ({ children }) => {
   // New state for AI orchestrator WebSocket
   const [aiStatus, setAiStatus] = useState("");
   const [isAILoading, setIsAILoading] = useState(false);
+
+  const [emailAlerts, setEmailAlerts] = useState([]);
+  const lastAlertCountRef = useRef(0);
 
   useEffect(() => {
     async function fetchData() {
@@ -182,6 +185,38 @@ export const MockDataProvider = ({ children }) => {
     };
   };
 
+  useEffect(() => {
+    const pollEmails = async () => {
+      // Don't trigger if the AI is already processing something
+      if (isAILoading) return;
+
+      try {
+        const res = await fetch("http://localhost:8000/api/emails/alerts");
+        const alerts = await res.json();
+        
+        if (alerts && Array.isArray(alerts) && alerts.length > lastAlertCountRef.current) {
+          console.log(`[Email Poller] New emails detected! Previous count: ${lastAlertCountRef.current}, New count: ${alerts.length}`);
+          lastAlertCountRef.current = alerts.length;
+          setEmailAlerts(alerts);
+          
+          // Auto-trigger the AI to analyze the new situation
+          generateAIRecommendation(
+            "New emails have arrived in the inbox. Please check them using get_unread_emails and update your recommendations based on the latest supply chain context."
+          );
+        }
+      } catch (err) {
+        console.error("[Email Poller] Failed to check for new emails:", err);
+      }
+    };
+
+    // Poll every 10 seconds
+    const interval = setInterval(pollEmails, 10000);
+    // Initial check on load
+    pollEmails();
+
+    return () => clearInterval(interval);
+  }, [isAILoading]);
+
   return (
     <MockDataContext.Provider
       value={{
@@ -198,6 +233,7 @@ export const MockDataProvider = ({ children }) => {
         aiStatus,
         isAILoading,
         generateAIRecommendation,
+        emailAlerts,
       }}
     >
       {children}
