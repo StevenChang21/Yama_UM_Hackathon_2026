@@ -1,0 +1,10 @@
+item_id,name,type,current_stock,reorder_point,lead_time_days,cost_per_unit,valid_from
+RAW-001,Microcontroller V2,Raw,50,300,14,15.50,2026-04-14 00:00
+RAW-002,Steel Housing,Raw,820,400,7,5.00,2026-04-14 00:00
+RAW-003,Copper Winding Coil,Raw,0,500,10,8.75,2026-04-14 00:00
+RAW-004,Tempered Glass Panel,Raw,80,400,12,22.00,2026-04-14 00:00
+RAW-005,Circuit Board Assembly,Raw,180,200,5,31.00,2026-04-14 00:00
+SKU-A,Premium Control Module,Finished,20,150,3,280.00,2026-04-14 00:00
+SKU-B,Standard Control Module,Finished,0,100,2,160.00,2026-04-14 00:00
+SKU-C,Industrial Sensor Pack,Finished,30,100,2,210.00,2026-04-14 00:00
+SKU-D,Compact Drive Unit,Finished,0,50,3,190.00,2026-04-14 00:00

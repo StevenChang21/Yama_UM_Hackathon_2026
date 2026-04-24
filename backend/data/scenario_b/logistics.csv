@@ -1,0 +1,7 @@
+resource,status,availability_date,notes,valid_from
+Receiving Dock A,Under Maintenance,2026-04-25,Scheduled structural repair - no inbound deliveries until Apr 25,2026-04-14 00:00
+Receiving Dock B,Available,Now,Available for urgent inbound - limited to pallets under 500kg,2026-04-14 00:00
+Truck Fleet A (3 trucks),Busy - Emergency Penang Delivery,2026-04-20,Delivering partial SKU-A batch to AutoParts Corp,2026-04-14 00:00
+Forklift Unit 3,Available,Now,Operational,2026-04-14 00:00
+Warehouse Floor Space (Bay 4-6),Available,Now,Approx. 400 sqm free,2026-04-14 00:00
+Cold Storage B,Occupied,2026-05-01,Holding partial SKU-A and SKU-C batches pending QC,2026-04-14 00:00

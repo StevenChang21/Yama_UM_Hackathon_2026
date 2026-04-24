@@ -1,0 +1,5 @@
+order_id,customer,item_id,qty,status,due_date,notes,valid_from,revision
+ORD-A01,AutoParts Corp,SKU-A,300,Pending,2026-05-15,Standard Q2 order - ample lead time,2026-04-14 00:00,1
+ORD-A02,AutoParts Corp,SKU-B,150,Pending,2026-05-15,Standard Q2 order - ample lead time,2026-04-14 00:00,1
+ORD-A03,NexGen Robotics,SKU-C,200,Pending,2026-05-20,Nationwide pilot deployment,2026-04-14 00:00,1
+ORD-A04,NexGen Robotics,SKU-D,80,Pending,2026-05-20,Nationwide pilot deployment,2026-04-14 00:00,1

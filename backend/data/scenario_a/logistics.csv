@@ -1,0 +1,7 @@
+resource,status,availability_date,notes,valid_from
+Receiving Dock A,Available,Now,Fully operational,2026-04-14 00:00
+Receiving Dock B,Available,Now,Standard operations,2026-04-14 00:00
+Truck Fleet A (3 trucks),Available,Now,Available for all deliveries,2026-04-14 00:00
+Forklift Unit 3,Available,Now,Operational,2026-04-14 00:00
+Warehouse Floor Space (Bay 4-6),Available,Now,Approx. 600 sqm free,2026-04-14 00:00
+Cold Storage B,Available,Now,Available,2026-04-14 00:00

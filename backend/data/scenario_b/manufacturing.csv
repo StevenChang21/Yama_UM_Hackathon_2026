@@ -1,0 +1,5 @@
+work_order_id,item_id,status,qty,eta,notes,valid_from
+WO-B01,SKU-A,Halted - RAW-001 Exhausted,20,TBD,Stopped at 20/300 units when RAW-001 hit zero,2026-04-14 00:00
+WO-B02,SKU-C,Not Started - RAW-003 Zero,0,TBD,Cannot begin production. RAW-003 stock is zero.,2026-04-14 00:00
+WO-B03,SKU-B,Blocked - Awaiting RAW-001,0,TBD,Queued but blocked by RAW-001 shortage. Also needs RAW-005 which is below threshold.,2026-04-14 00:00
+WO-B04,SKU-D,Planned - Cannot Start,130,TBD,Requires RAW-003 (zero) and RAW-002. Cannot start until RAW-003 restocked.,2026-04-14 00:00

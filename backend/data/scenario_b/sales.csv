@@ -1,0 +1,6 @@
+order_id,customer,item_id,qty,status,due_date,notes,valid_from,revision
+ORD-B01,AutoParts Corp,SKU-A,300,Pending,2026-05-05,URGENT - assembly line shuts down without these parts,2026-04-14 00:00,1
+ORD-B02,AutoParts Corp,SKU-B,150,Pending,2026-05-05,URGENT - same assembly line deadline,2026-04-14 00:00,1
+ORD-B03,NexGen Robotics,SKU-C,200,Pending,2026-05-08,Investor showcase deadline - late delivery penalty 15%,2026-04-14 00:00,1
+ORD-B04,NexGen Robotics,SKU-D,80,Pending,2026-05-08,Investor showcase deadline - late delivery penalty 15%,2026-04-14 00:00,1
+ORD-B05,AutoParts Corp,SKU-D,50,Pending,2026-05-03,CRITICAL - emergency replacement parts for production line,2026-04-14 00:00,1

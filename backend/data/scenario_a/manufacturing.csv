@@ -1,0 +1,5 @@
+work_order_id,item_id,status,qty,eta,notes,valid_from
+WO-A01,SKU-A,Planned,300,2026-05-10,Awaiting production schedule - materials available,2026-04-14 00:00
+WO-A02,SKU-B,Planned,150,2026-05-10,Awaiting production schedule - materials available,2026-04-14 00:00
+WO-A03,SKU-C,Planned,200,2026-05-15,Awaiting production schedule - materials available,2026-04-14 00:00
+WO-A04,SKU-D,Planned,80,2026-05-15,Awaiting production schedule - materials available,2026-04-14 00:00
