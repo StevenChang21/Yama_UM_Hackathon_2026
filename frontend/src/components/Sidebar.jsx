@@ -5,6 +5,7 @@ import {
   PackageSearch,
   FileEdit,
   Lightbulb,
+  GitCompare,
   History,
   Truck,
 } from "lucide-react";
@@ -26,6 +27,11 @@ const Sidebar = () => {
       name: "Recommendations",
       path: "/recommendations",
       icon: <Lightbulb size={20} />,
+    },
+    {
+      name: "Scenario Compare",
+      path: "/compare",
+      icon: <GitCompare size={20} />,
     },
     { name: "History", path: "/history", icon: <History size={20} /> },
     { name: "Suppliers", path: "/suppliers", icon: <Truck size={20} /> },

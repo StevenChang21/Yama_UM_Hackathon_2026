@@ -58,6 +58,9 @@ export const MockDataProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const [aiStatus, setAiStatus] = useState("");
   const [isAILoading, setIsAILoading] = useState(false);
+  const [comparison, setComparison] = useState(null);
+  const [isCompareLoading, setIsCompareLoading] = useState(false);
+  const [compareStatuses, setCompareStatuses] = useState([]);
 
   // The snapshot timestamp the AI will use when querying data
   const [analysisAsOfDate, setAnalysisAsOfDate] = useState("2026-04-23 08:00");
@@ -188,6 +191,50 @@ export const MockDataProvider = ({ children }) => {
     };
   };
 
+  const generateComparison = (inputText) => {
+    setIsCompareLoading(true);
+    setCompareStatuses([]);
+    setComparison(null);
+
+    let ws;
+    const connectionTimeout = setTimeout(() => {
+      setIsCompareLoading(false);
+      try { ws.close(); } catch (_) {}
+    }, 30000);
+
+    try {
+      ws = new WebSocket("ws://localhost:8000/ws/compare");
+    } catch (err) {
+      clearTimeout(connectionTimeout);
+      setIsCompareLoading(false);
+      return;
+    }
+
+    ws.onopen = () => {
+      clearTimeout(connectionTimeout);
+      ws.send(JSON.stringify({ prompt: inputText }));
+    };
+
+    ws.onmessage = (event) => {
+      let response;
+      try { response = JSON.parse(event.data); } catch { return; }
+
+      if (response.type === "status") {
+        setCompareStatuses((prev) => [...prev, response.message]);
+      } else if (response.type === "comparison") {
+        setComparison({ a: response.scenario_a, b: response.scenario_b });
+        setIsCompareLoading(false);
+        ws.close();
+      } else if (response.type === "error") {
+        setIsCompareLoading(false);
+        ws.close();
+      }
+    };
+
+    ws.onerror = () => { clearTimeout(connectionTimeout); setIsCompareLoading(false); };
+    ws.onclose = () => { clearTimeout(connectionTimeout); };
+  };
+
   return (
     <MockDataContext.Provider
       value={{
@@ -206,6 +253,10 @@ export const MockDataProvider = ({ children }) => {
         analysisAsOfDate,
         setAnalysisAsOfDate,
         generateAIRecommendation,
+        comparison,
+        isCompareLoading,
+        compareStatuses,
+        generateComparison,
       }}
     >
       {children}

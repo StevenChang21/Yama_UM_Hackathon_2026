@@ -47,3 +47,27 @@ class WebSocketReporter(StatusReporter):
         if raw_output:
             payload["raw_output"] = raw_output
         await self._ws.send_json(payload)
+
+
+class CollectingReporter(StatusReporter):
+    """
+    Reporter for parallel scenario comparison.
+    Streams tagged status messages live but stores the final result
+    instead of sending it, so the caller can send both results together.
+    """
+
+    def __init__(self, ws, label: str):
+        self._ws = ws
+        self._label = label
+        self.final_result = None
+        self.final_error = None
+
+    async def status(self, message: str) -> None:
+        await self._ws.send_json({"type": "status", "message": f"[{self._label}] {message}"})
+
+    async def result(self, data: dict) -> None:
+        self.final_result = data
+
+    async def error(self, message: str, raw_output: str = None) -> None:
+        self.final_error = message
+        await self._ws.send_json({"type": "status", "message": f"[{self._label}] ERROR: {message}"})

@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 import pandas as pd
 import json
 import os
-from orchestrator import process_orchestration
+from orchestrator import process_orchestration, process_comparison
 
 load_dotenv()
 
@@ -136,3 +136,19 @@ async def websocket_endpoint(websocket: WebSocket):
         print("Client disconnected")
     except Exception as e:
         print(f"Websocket error: {e}")
+
+@app.websocket("/ws/compare")
+async def websocket_compare(websocket: WebSocket):
+    await websocket.accept()
+    try:
+        raw = await websocket.receive_text()
+        try:
+            payload = json.loads(raw) if raw.strip().startswith('{') else {"prompt": raw}
+        except json.JSONDecodeError:
+            payload = {"prompt": raw}
+        input_text = payload.get("prompt", "Analyze the supply chain and provide a recommendation.")
+        await process_comparison(websocket, input_text)
+    except WebSocketDisconnect:
+        print("Compare client disconnected")
+    except Exception as e:
+        print(f"Compare websocket error: {e}")

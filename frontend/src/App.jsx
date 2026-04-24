@@ -10,6 +10,7 @@ import Dashboard from "./pages/Dashboard";
 import Inventory from "./pages/Inventory";
 import Inputs from "./pages/Inputs";
 import Recommendations from "./pages/Recommendations";
+import Compare from "./pages/Compare";
 import History from "./pages/History";
 import Suppliers from "./pages/Suppliers";
 import { MockDataProvider } from "./context/MockDataContext";
@@ -28,6 +29,7 @@ function App() {
               <Route path="/inventory" element={<Inventory />} />
               <Route path="/inputs" element={<Inputs />} />
               <Route path="/recommendations" element={<Recommendations />} />
+              <Route path="/compare" element={<Compare />} />
               <Route path="/history" element={<History />} />
               <Route path="/suppliers" element={<Suppliers />} />
             </Routes>

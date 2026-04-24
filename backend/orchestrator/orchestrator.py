@@ -18,7 +18,7 @@ from typing import Optional
 from .data_repository import DataRepository
 from .tool_registry import Tool, ToolRegistry
 from .llm_client import LLMClient, ILMUClient
-from .reporter import StatusReporter, WebSocketReporter
+from .reporter import StatusReporter, WebSocketReporter, CollectingReporter
 
 
 SYSTEM_PROMPT = """
@@ -50,15 +50,42 @@ Do not output anything other than the JSON object as your final response.
 
 MOCK_RESULT = {
     "recommended_quantity": 500,
-    "chosen_supplier": "Global Tech Components",
+    "chosen_supplier": "GlobalTech Components",
     "chosen_raw_materials": "RAW-001",
     "estimated_cost": 7750.00,
     "estimated_delivery_date": "2026-05-03",
-    "justification": "Sales orders require 700 units of RAW-001 total across SKU-A and SKU-B. Current stock is 500. There is a cross-SKU conflict! Recommending an immediate order of 500 additional units (200 shortfall + 300 safety stock) to avoid production stalling next week.",
+    "justification": "Sales orders require 700 units of RAW-001 total across SKU-A and SKU-B. Current stock is 500. There is a cross-SKU conflict. Recommending an immediate order of 500 additional units (200 shortfall + 300 safety stock) to avoid production stalling next week.",
     "drafts": {
-        "purchase_order": "PO-2026-001\nSupplier: Global Tech Components\nItem: RAW-001\nQty: 500",
+        "purchase_order": "PO-2026-001\nSupplier: GlobalTech Components\nItem: RAW-001\nQty: 500",
         "work_order": "WO-2026-002\nItem: SKU-A & SKU-B\nStatus: Pending Material Arrival",
-        "rfq_email": "Subject: URGENT RFQ for RAW-001\n\nDear Global Tech,\nPlease provide a quote for 500 units of RAW-001. We need expedited shipping."
+        "rfq_email": "Subject: URGENT RFQ for RAW-001\n\nDear GlobalTech,\nPlease provide a quote for 500 units of RAW-001. We need expedited shipping."
+    }
+}
+
+MOCK_RESULT_A = {
+    "recommended_quantity": 150,
+    "chosen_supplier": "GlobalTech Components",
+    "chosen_raw_materials": "RAW-001",
+    "estimated_cost": 2325.00,
+    "estimated_delivery_date": "2026-05-02",
+    "justification": "Stock levels are healthy across all 5 raw materials. BOM analysis shows current inventory can support approximately 70-80% of total demand without restocking. The only marginal case is RAW-001: producing 300x SKU-A requires 600 units (2 per unit), and current stock is 650 — leaving only a 50-unit buffer. A precautionary order of 150 units of RAW-001 via standard delivery ($15.50/unit) is recommended as a safety buffer. Budget is strong at $120,000 — no financial constraint. All logistics fully operational. No emergency action required.",
+    "drafts": {
+        "purchase_order": "PO-A-001\nSupplier: GlobalTech Components\nItem: Microcontroller V2 (RAW-001)\nQty: 150 units\nUnit Price: $15.50 (standard delivery)\nTotal: $2,325\nDelivery: 14-day standard, ETA May 2nd\nPriority: Normal",
+        "rfq_email": "Subject: Purchase Order — Microcontroller V2 (RAW-001)\n\nDear GlobalTech Components,\nPlease process PO-A-001 for 150 units of Microcontroller V2 at $15.50/unit under standard 14-day delivery terms. Total value: $2,325. Delivery address: YamaTech Receiving Dock A. No expedite required.\n\nRegards,\nYamaTech Procurement"
+    }
+}
+
+MOCK_RESULT_B = {
+    "recommended_quantity": 1150,
+    "chosen_supplier": "GlobalTech Components (RAW-001) + FastComp Metals (RAW-003 partial) + ClearTech Glass (RAW-004)",
+    "chosen_raw_materials": "RAW-001, RAW-003, RAW-004",
+    "estimated_cost": 29462.50,
+    "estimated_delivery_date": "2026-04-22",
+    "justification": "CRITICAL situation: 3 of 4 work orders halted. RAW-003 = 0 (blocks all SKU-C and SKU-D production). RAW-001 = 50 (blocks SKU-A and SKU-B). RAW-004 = 80 (blocks SKU-A). Customer orders totaling approx $246,500 at risk with deadlines May 3-8. Budget constraint: $38,000 operating cash. Recommended split procurement: (1) 800 units RAW-001 from GlobalTech expedited at $16.50/unit = $13,200 — ETA Apr 20; (2) 350 units RAW-003 from FastComp at $8.75/unit = $3,062 (max available, first-come) — ETA Apr 22; (3) 600 units RAW-004 from ClearTech Glass at $22.50/unit = $13,500 — ETA Apr 26. Total: $29,762 within budget. WARNING: FastComp can only supply 350 of 800 needed RAW-003 units — SKU-C and SKU-D production will remain partially constrained. Dock A is under maintenance until Apr 25; use Dock B for all inbound deliveries.",
+    "drafts": {
+        "purchase_order_raw001": "PO-B-001\nSupplier: GlobalTech Components\nItem: Microcontroller V2 (RAW-001)\nQty: 800 units\nUnit Price: $16.50 (expedited air freight)\nTotal: $13,200\nDelivery: 6-day expedited, ETA Apr 20\nPriority: URGENT — production halted",
+        "purchase_order_raw003": "PO-B-002\nSupplier: FastComp Metals\nItem: Copper Winding Coil (RAW-003)\nQty: 350 units (maximum available)\nUnit Price: $8.75\nTotal: $3,062\nDelivery: 8-day standard, ETA Apr 22\nNote: Only 350/800 needed units available — partial fulfillment",
+        "escalation_memo": "ESCALATION MEMO — Apr 14 2026\nTo: Operations Director\nFrom: Z.AI Supply Chain Orchestrator\n\n3 of 4 production lines are halted due to critical material shortages. Emergency procurement authorized totaling $29,762 of $38,000 available budget.\n\nCustomer risk: $246,500 across 5 orders with deadlines May 3-8.\nPenalty exposure: NexGen late delivery clause = $40,500 if May 8 missed.\n\nAction items:\n1. Approve PO-B-001 ($13,200) — GlobalTech RAW-001\n2. Approve PO-B-002 ($3,062) — FastComp RAW-003\n3. Approve PO-B-003 ($13,500) — ClearTech RAW-004\n4. Route all inbound to Dock B (Dock A under maintenance until Apr 25)\n\nPartial production expected to resume Apr 21 for SKU-A."
     }
 }
 
@@ -72,9 +99,10 @@ class Orchestrator:
 
     MAX_STEPS = 10
 
-    def __init__(self, llm_client: Optional[LLMClient], tool_registry: ToolRegistry):
+    def __init__(self, llm_client: Optional[LLMClient], tool_registry: ToolRegistry, mock_result: dict = None):
         self._llm = llm_client
         self._tools = tool_registry
+        self._mock_result = mock_result or MOCK_RESULT
 
     async def run(self, reporter: StatusReporter, input_text: str) -> None:
         """Entry point: run the full agentic orchestration loop."""
@@ -166,7 +194,7 @@ class Orchestrator:
         await asyncio.sleep(1)
         await reporter.status("Analyzing cross-SKU conflict for RAW-001...")
         await asyncio.sleep(1)
-        await reporter.result(MOCK_RESULT)
+        await reporter.result(self._mock_result)
 
 
 # ─── Factory & Entry Point ──────────────────────────────────────────
@@ -202,16 +230,18 @@ def _build_tool_registry(data_repo: DataRepository) -> ToolRegistry:
     return registry
 
 
-def create_orchestrator(as_of_date: Optional[str] = None) -> Orchestrator:
+def create_orchestrator(as_of_date: Optional[str] = None, scenario: Optional[str] = None) -> Orchestrator:
     """Factory: builds a fully configured Orchestrator with all dependencies wired up."""
-    data_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
+    base_data_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
+    data_dir = os.path.join(base_data_dir, scenario) if scenario else base_data_dir
     data_repo = DataRepository(data_dir, as_of_date=as_of_date)
     tool_registry = _build_tool_registry(data_repo)
 
     ilmu_api_key = os.environ.get("ILMU_API_KEY")
     llm_client = ILMUClient(api_key=ilmu_api_key) if ilmu_api_key else None
 
-    return Orchestrator(llm_client=llm_client, tool_registry=tool_registry)
+    mock_result = MOCK_RESULT_A if scenario == "scenario_a" else MOCK_RESULT_B if scenario == "scenario_b" else MOCK_RESULT
+    return Orchestrator(llm_client=llm_client, tool_registry=tool_registry, mock_result=mock_result)
 
 
 async def process_orchestration(ws, input_text: str, as_of_date: Optional[str] = None) -> None:
@@ -222,3 +252,27 @@ async def process_orchestration(ws, input_text: str, as_of_date: Optional[str] =
     orchestrator = create_orchestrator(as_of_date=as_of_date)
     reporter = WebSocketReporter(ws)
     await orchestrator.run(reporter, input_text)
+
+
+async def process_comparison(ws, input_text: str) -> None:
+    """
+    Run Scenario A and Scenario B orchestrators in parallel.
+    Streams tagged status messages live; sends both results in a single
+    'comparison' message once both finish.
+    """
+    reporter_a = CollectingReporter(ws, "Scenario A")
+    reporter_b = CollectingReporter(ws, "Scenario B")
+    orch_a = create_orchestrator(scenario="scenario_a")
+    orch_b = create_orchestrator(scenario="scenario_b")
+
+    await ws.send_json({"type": "status", "message": "Running both scenarios in parallel..."})
+    await asyncio.gather(
+        orch_a.run(reporter_a, input_text),
+        orch_b.run(reporter_b, input_text),
+    )
+
+    await ws.send_json({
+        "type": "comparison",
+        "scenario_a": reporter_a.final_result or {"error": reporter_a.final_error or "No result"},
+        "scenario_b": reporter_b.final_result or {"error": reporter_b.final_error or "No result"},
+    })
