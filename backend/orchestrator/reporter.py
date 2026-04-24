@@ -52,22 +52,23 @@ class WebSocketReporter(StatusReporter):
 class CollectingReporter(StatusReporter):
     """
     Reporter for parallel scenario comparison.
-    Streams tagged status messages live but stores the final result
-    instead of sending it, so the caller can send both results together.
+    Collects all status messages and the final result in memory.
+    Never writes to the WebSocket directly — the caller replays messages
+    after asyncio.gather finishes, avoiding concurrent-write race conditions.
     """
 
-    def __init__(self, ws, label: str):
-        self._ws = ws
+    def __init__(self, label: str):
         self._label = label
+        self.statuses: list[str] = []
         self.final_result = None
         self.final_error = None
 
     async def status(self, message: str) -> None:
-        await self._ws.send_json({"type": "status", "message": f"[{self._label}] {message}"})
+        self.statuses.append(f"[{self._label}] {message}")
 
     async def result(self, data: dict) -> None:
         self.final_result = data
 
     async def error(self, message: str, raw_output: str = None) -> None:
         self.final_error = message
-        await self._ws.send_json({"type": "status", "message": f"[{self._label}] ERROR: {message}"})
+        self.statuses.append(f"[{self._label}] ERROR: {message}")

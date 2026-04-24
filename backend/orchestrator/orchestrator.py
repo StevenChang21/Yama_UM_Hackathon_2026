@@ -257,22 +257,39 @@ async def process_orchestration(ws, input_text: str, as_of_date: Optional[str] =
 async def process_comparison(ws, input_text: str) -> None:
     """
     Run Scenario A and Scenario B orchestrators in parallel.
-    Streams tagged status messages live; sends both results in a single
-    'comparison' message once both finish.
+    Each CollectingReporter accumulates messages in memory (no WebSocket writes
+    during gather — concurrent writes would race and corrupt the connection).
+    After both finish, replay all status messages then send the combined result.
     """
-    reporter_a = CollectingReporter(ws, "Scenario A")
-    reporter_b = CollectingReporter(ws, "Scenario B")
+    reporter_a = CollectingReporter("Scenario A")
+    reporter_b = CollectingReporter("Scenario B")
     orch_a = create_orchestrator(scenario="scenario_a")
     orch_b = create_orchestrator(scenario="scenario_b")
 
     await ws.send_json({"type": "status", "message": "Running both scenarios in parallel..."})
+
     await asyncio.gather(
         orch_a.run(reporter_a, input_text),
         orch_b.run(reporter_b, input_text),
     )
+
+    # Interleave status messages from both reporters (A[0], B[0], A[1], B[1], ...)
+    for msg in _interleave(reporter_a.statuses, reporter_b.statuses):
+        await ws.send_json({"type": "status", "message": msg})
 
     await ws.send_json({
         "type": "comparison",
         "scenario_a": reporter_a.final_result or {"error": reporter_a.final_error or "No result"},
         "scenario_b": reporter_b.final_result or {"error": reporter_b.final_error or "No result"},
     })
+
+
+def _interleave(list_a: list, list_b: list) -> list:
+    """Zip two lists together, appending any remainder from the longer one."""
+    result = []
+    for a, b in zip(list_a, list_b):
+        result.append(a)
+        result.append(b)
+    result.extend(list_a[len(list_b):])
+    result.extend(list_b[len(list_a):])
+    return result

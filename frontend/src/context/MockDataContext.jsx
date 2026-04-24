@@ -232,7 +232,7 @@ export const MockDataProvider = ({ children }) => {
     };
 
     ws.onerror = () => { clearTimeout(connectionTimeout); setIsCompareLoading(false); };
-    ws.onclose = () => { clearTimeout(connectionTimeout); };
+    ws.onclose = () => { clearTimeout(connectionTimeout); setIsCompareLoading(false); };
   };
 
   return (
