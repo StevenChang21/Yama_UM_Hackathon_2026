@@ -7,3 +7,4 @@ prophet
 python-multipart
 openai
 websockets
+python-dotenv

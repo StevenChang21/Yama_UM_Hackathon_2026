@@ -1,9 +1,12 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
 import pandas as pd
 import json
 import os
 from orchestrator import process_orchestration
+
+load_dotenv()
 
 app = FastAPI(title="AI Inventory Replenishment API")
 
