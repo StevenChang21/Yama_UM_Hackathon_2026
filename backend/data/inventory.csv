@@ -1,10 +1,10 @@
 item_id,name,type,current_stock,reorder_point,lead_time_days,cost_per_unit
+RAW-001,Microcontroller V2,Raw,700,300,14,15.5
+RAW-002,Steel Housing,Raw,900,400,7,5.0
+RAW-003,Copper Winding Coil,Raw,1500,500,10,8.75
+RAW-004,Tempered Glass Panel,Raw,600,400,12,22.0
+RAW-005,Circuit Board Assembly,Raw,500,200,5,31.0
+SKU-A,Premium Control Module,Finished,0,150,3,280.0
+SKU-B,Standard Control Module,Finished,0,100,2,160.0
+SKU-C,Industrial Sensor Pack,Finished,0,100,2,210.0
 SKU-D,Compact Drive Unit,Finished,0,50,3,190.0
-SKU-B,Standard Control Module,Finished,45,100,2,160.0
-SKU-A,Premium Control Module,Finished,30,150,3,280.0
-RAW-004,Tempered Glass Panel,Raw,150,400,12,22.0
-RAW-002,Steel Housing,Raw,800,400,7,5.0
-RAW-005,Circuit Board Assembly,Raw,370,200,5,31.0
-SKU-C,Industrial Sensor Pack,Finished,50,100,2,210.0
-RAW-003,Copper Winding Coil,Raw,600,500,10,8.75
-RAW-001,Microcontroller V2,Raw,1520,300,14,15.5
