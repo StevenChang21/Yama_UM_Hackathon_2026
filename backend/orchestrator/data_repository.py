@@ -66,37 +66,30 @@ class DataRepository:
     def get_inventory_data(self) -> dict:
         """Get current inventory stock levels and bill of materials (BOM)."""
         df = pd.read_csv(os.path.join(self._data_dir, "inventory.csv"))
-        filtered = self._filter_by_date(df, "valid_from", group_col="item_id")
         return {
-            "inventory": self._drop_meta(filtered, ["valid_from"]).to_dict(orient="records"),
+            "inventory": df.to_dict(orient="records"),
             "bom": self.read_csv("bom.csv"),
         }
 
     def get_sales_data(self) -> list[dict]:
         """Get pending sales orders."""
         df = pd.read_csv(os.path.join(self._data_dir, "sales.csv"))
-        filtered = self._filter_by_date(
-            df, "valid_from", group_col="order_id", revision_col="revision"
-        )
-        return self._drop_meta(filtered, ["valid_from", "revision"]).to_dict(orient="records")
+        return df.to_dict(orient="records")
 
     def get_manufacturing_data(self) -> list[dict]:
         """Get current manufacturing work orders and WIP."""
         df = pd.read_csv(os.path.join(self._data_dir, "manufacturing.csv"))
-        filtered = self._filter_by_date(df, "valid_from", group_col="work_order_id")
-        return self._drop_meta(filtered, ["valid_from"]).to_dict(orient="records")
+        return df.to_dict(orient="records")
 
     def get_finance_data(self) -> list[dict]:
         """Get current financial cash balances and payables."""
         df = pd.read_csv(os.path.join(self._data_dir, "finance.csv"))
-        filtered = self._filter_by_date(df, "valid_from", group_col="account_name")
-        return self._drop_meta(filtered, ["valid_from"]).to_dict(orient="records")
+        return df.to_dict(orient="records")
 
     def get_logistics_data(self) -> list[dict]:
         """Get logistics resource availability."""
         df = pd.read_csv(os.path.join(self._data_dir, "logistics.csv"))
-        filtered = self._filter_by_date(df, "valid_from", group_col="resource")
-        return self._drop_meta(filtered, ["valid_from"]).to_dict(orient="records")
+        return df.to_dict(orient="records")
 
     def get_unread_emails_scenario(self) -> list[dict]:
         """Get unread emails from the inbox."""

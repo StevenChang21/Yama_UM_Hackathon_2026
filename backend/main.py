@@ -64,11 +64,7 @@ app.add_middleware(
 
 
 
-def _latest_per_group(df: pd.DataFrame, date_col: str, group_col: str) -> pd.DataFrame:
-    """Return the most recent row per group, used by REST endpoints to show current state."""
-    df = df.copy()
-    df[date_col] = pd.to_datetime(df[date_col])
-    return df.sort_values(date_col).groupby(group_col).tail(1).reset_index(drop=True)
+
 
 @app.get("/")
 def read_root():
@@ -79,7 +75,6 @@ def get_inventory():
     """Returns the current inventory status, highlighting items at risk."""
     try:
         df = pd.read_csv(os.path.join("data", "inventory.csv"))
-        df = _latest_per_group(df, "valid_from", "item_id")
         inventory_status = []
         for _, item in df.iterrows():
             risk_level = "High" if item["current_stock"] <= item["reorder_point"] else "Low"
@@ -100,7 +95,6 @@ def get_inventory():
 def get_finance():
     try:
         df = pd.read_csv(os.path.join("data", "finance.csv"))
-        df = _latest_per_group(df, "valid_from", "account_name")
         return [{"account_name": row["account_name"], "balance_usd": row["balance_usd"]} for _, row in df.iterrows()]
     except Exception as e:
         return {"error": str(e)}
@@ -109,7 +103,6 @@ def get_finance():
 def get_sales():
     try:
         df = pd.read_csv(os.path.join("data", "sales.csv"))
-        df = _latest_per_group(df, "valid_from", "order_id")
         return [{"order_id": s["order_id"], "sku": s["item_id"], "qty": s["qty"], "status": s["status"], "due_date": s["due_date"]} for _, s in df.iterrows()]
     except Exception as e:
         return {"error": str(e)}
@@ -118,7 +111,6 @@ def get_sales():
 def get_manufacturing():
     try:
         df = pd.read_csv(os.path.join("data", "manufacturing.csv"))
-        df = _latest_per_group(df, "valid_from", "work_order_id")
         return [{"work_order_id": r["work_order_id"], "sku": r["item_id"], "status": r["status"], "pending_units": r["qty"], "eta": r["eta"]} for _, r in df.iterrows()]
     except Exception as e:
         return {"error": str(e)}
@@ -127,7 +119,6 @@ def get_manufacturing():
 def get_logistics():
     try:
         df = pd.read_csv(os.path.join("data", "logistics.csv"))
-        df = _latest_per_group(df, "valid_from", "resource")
         return [{"resource": r["resource"], "status": r["status"], "availability_date": r["availability_date"]} for _, r in df.iterrows()]
     except Exception as e:
         return {"error": str(e)}
@@ -187,11 +178,6 @@ def update_preferences(prefs: dict):
 
 # ── Agent Endpoints & Background Loop ───────────────────────────
 
-@app.on_event("startup")
-async def startup_event():
-    # Legacy startup event replaced by lifespan
-    pass
-
 async def unified_background_loop():
     """Background task that polls emails every 10 minutes and triggers the agent if new emails are found."""
     from email_reader import process_emails as fetch_and_analyze_emails
@@ -217,8 +203,11 @@ def get_agent_status():
     """Returns what the agent is currently doing."""
     status_path = os.path.join("data", "agent_status.json")
     if os.path.exists(status_path):
-        with open(status_path) as f:
-            return json.load(f)
+        try:
+            with open(status_path) as f:
+                return json.load(f)
+        except json.JSONDecodeError:
+            pass
     return {"status": "Idle", "current_email": None}
 
 @app.post("/api/agent/run")
@@ -238,8 +227,11 @@ def get_audit_log():
     """Return the last saved audit log."""
     log_path = os.path.join("data", "audit_log.json")
     if os.path.exists(log_path):
-        with open(log_path) as f:
-            return json.load(f)
+        try:
+            with open(log_path) as f:
+                return json.load(f)
+        except json.JSONDecodeError:
+            pass
     return []
 
 @app.post("/api/analyze")

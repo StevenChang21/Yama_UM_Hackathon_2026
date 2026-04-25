@@ -44,6 +44,12 @@ def send_real_email(to_address, subject, body):
         print(f"Failed to send real email to {to_address}: {e}")
         return False
 
+def write_json_atomically(data, path):
+    tmp_path = path + ".tmp"
+    with open(tmp_path, "w") as f:
+        json.dump(data, f, indent=2, default=str)
+    os.replace(tmp_path, path)
+
 def remove_spam_from_emails_csv(spam_id):
     csv_path = os.path.join(DATA_DIR, "emails.csv")
     if not os.path.exists(csv_path): return
@@ -58,8 +64,7 @@ def remove_spam_from_emails_csv(spam_id):
 
 
 def set_status(status_msg, email_id=None):
-    with open(STATUS_PATH, "w") as f:
-        json.dump({"status": status_msg, "current_email": email_id, "updated_at": datetime.now().isoformat()}, f)
+    write_json_atomically({"status": status_msg, "current_email": email_id, "updated_at": datetime.now().isoformat()}, STATUS_PATH)
 
 def load_csv(name):
     return pd.read_csv(os.path.join(DATA_DIR, name))
@@ -67,19 +72,12 @@ def load_csv(name):
 def save_csv(name, df):
     df.to_csv(os.path.join(DATA_DIR, name), index=False)
 
-def latest_per_group(df, date_col, group_col):
-    df = df.copy()
-    df[date_col] = pd.to_datetime(df[date_col])
-    return df.sort_values(date_col).groupby(group_col).tail(1).reset_index(drop=True)
-
 def get_current_stock(inv_df, item_id):
-    filtered = latest_per_group(inv_df, "valid_from", "item_id")
-    row = filtered[filtered["item_id"] == item_id]
+    row = inv_df[inv_df["item_id"] == item_id]
     return int(row["current_stock"].iloc[0]) if len(row) > 0 else 0
 
 def get_current_balance(fin_df, account):
-    filtered = latest_per_group(fin_df, "valid_from", "account_name")
-    row = filtered[filtered["account_name"] == account]
+    row = fin_df[fin_df["account_name"] == account]
     return float(row["balance_usd"].iloc[0]) if len(row) > 0 else 0.0
 
 def process_emails():
@@ -190,8 +188,7 @@ def process_emails():
             entry["agent_description"] = "Agent could not process — AI client not configured."
             entry["status"] = "Blocked"
             audit_log.append(entry)
-            with open(AUDIT_LOG_PATH, "w") as f:
-                json.dump(audit_log, f, indent=2, default=str)
+            write_json_atomically(audit_log, AUDIT_LOG_PATH)
             continue
 
         # Build context
@@ -199,16 +196,16 @@ def process_emails():
         bom_lines = [f"- {r['parent_id']} needs {r['qty_required']}x {r['child_id']}" for _, r in bom_df.iterrows()]
         
         inv_context = []
-        for _, row in latest_per_group(inv_df, "valid_from", "item_id").iterrows():
+        for _, row in inv_df.iterrows():
             inv_context.append(f"- {row['item_id']}: {row['current_stock']} units (reorder point: {row.get('reorder_point', 0)}, unit cost: ${row.get('unit_cost', 0)})")
         
         sales_lines = []
-        for _, s in latest_per_group(sales_df, "valid_from", "order_id").iterrows():
+        for _, s in sales_df.iterrows():
             if s["status"] != "Completed":
                 sales_lines.append(f"- {s['order_id']}: {s['qty']} units of {s['item_id']}, due {s['due_date']}, status: {s['status']}")
                 
         mfg_lines = []
-        for _, r in latest_per_group(mfg_df, "valid_from", "work_order_id").iterrows():
+        for _, r in mfg_df.iterrows():
             if r["status"] != "Completed":
                 mfg_lines.append(f"- {r['work_order_id']}: {r['item_id']}, status: {r['status']}, {r['qty']} pending units")
         
@@ -294,8 +291,9 @@ If no CSV updates are needed, leave arrays empty. Return ONLY valid JSON, no mar
 """
 
         try:
+            gemini_model = os.environ.get("GEMINI_MODEL", "gemini-3.1-flash-lite")
             response = ai_client.chat.completions.create(
-                model="gemini-3.1-flash-lite-preview",
+                model=gemini_model,
                 messages=[
                     {"role": "system", "content": "You are a JSON-only API. No markdown formatting, just raw JSON."},
                     {"role": "user", "content": prompt}
@@ -319,8 +317,7 @@ If no CSV updates are needed, leave arrays empty. Return ONLY valid JSON, no mar
                     entry["decision"] = "Deleted from database."
                     entry["status"] = "Skipped"
                     audit_log.append(entry)
-                    with open(AUDIT_LOG_PATH, "w") as f:
-                        json.dump(audit_log, f, indent=2, default=str)
+                    write_json_atomically(audit_log, AUDIT_LOG_PATH)
                     continue
 
                 entry["inference"] = res.get("inference", "")
@@ -349,12 +346,9 @@ If no CSV updates are needed, leave arrays empty. Return ONLY valid JSON, no mar
                 change = inv_upd.get("stock_change", 0)
                 if change != 0:
                     current = get_current_stock(inv_df, item_id)
-                    # We just append a new row to represent the change
-                    filtered = latest_per_group(inv_df, "valid_from", "item_id")
-                    row = filtered[filtered["item_id"] == item_id].iloc[0].to_dict()
-                    row["current_stock"] = current + change
-                    row["valid_from"] = date
-                    inv_df = pd.concat([inv_df, pd.DataFrame([row])], ignore_index=True)
+                    idx = inv_df.index[inv_df["item_id"] == item_id].tolist()
+                    if idx:
+                        inv_df.loc[idx[-1], "current_stock"] = current + change
                     files_modified.add("inventory.csv")
                     entry["files_updated"].append("inventory.csv")
                     
@@ -363,12 +357,10 @@ If no CSV updates are needed, leave arrays empty. Return ONLY valid JSON, no mar
                 change = fin_upd.get("balance_change", 0)
                 if change != 0:
                     current = get_current_balance(fin_df, acc)
-                    filtered = latest_per_group(fin_df, "valid_from", "account_name")
-                    row = filtered[filtered["account_name"] == acc].iloc[0].to_dict()
-                    row["balance_usd"] = current + change
-                    row["valid_from"] = date
-                    row["notes"] = f"AI Update from {eid}"
-                    fin_df = pd.concat([fin_df, pd.DataFrame([row])], ignore_index=True)
+                    idx = fin_df.index[fin_df["account_name"] == acc].tolist()
+                    if idx:
+                        fin_df.loc[idx[-1], "balance_usd"] = current + change
+                        fin_df.loc[idx[-1], "notes"] = f"AI Update from {eid}"
                     files_modified.add("finance.csv")
                     entry["files_updated"].append("finance.csv")
                     
@@ -412,8 +404,7 @@ If no CSV updates are needed, leave arrays empty. Return ONLY valid JSON, no mar
         audit_log.append(entry)
 
         # Save audit log incrementally
-        with open(AUDIT_LOG_PATH, "w") as f:
-            json.dump(audit_log, f, indent=2, default=str)
+        write_json_atomically(audit_log, AUDIT_LOG_PATH)
 
     # Save updated CSVs
     save_csv("inventory.csv", inv_df)
