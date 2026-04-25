@@ -12,8 +12,15 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from dotenv import load_dotenv
+from openai import OpenAI
 
 load_dotenv()
+
+_api_key = os.environ.get("GEMINI_API_KEY", "")
+ai_client = OpenAI(
+    api_key=_api_key,
+    base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
+) if _api_key else None
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 AUDIT_LOG_PATH = os.path.join(DATA_DIR, "audit_log.json")
@@ -100,14 +107,6 @@ def process_emails():
     processed_ids = {e.get("email_id") for e in audit_log}
     files_modified = set()
 
-    from openai import OpenAI
-    api_key = os.environ.get("GEMINI_API_KEY", "")
-    ai_client = OpenAI(
-        api_key=api_key,
-        base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
-    ) if api_key else None
-
-    
     emails_processed_this_run = 0
 
     # Load Preferences
@@ -345,6 +344,16 @@ If no CSV updates are needed, leave arrays empty. Return ONLY valid JSON, no mar
                         entry["risks"].append("BLOCKED: Transaction exceeds the $185,000 budget constraint threshold.")
                         updates = {}  # Block all CSV updates
                         break
+
+                # Check Guardrails: Hallucinated SKU detection
+                invalid_skus = [
+                    upd["item_id"] for upd in updates.get("inventory_changes", [])
+                    if inv_df[inv_df["item_id"] == upd.get("item_id", "")].empty
+                ]
+                if invalid_skus:
+                    entry["inference"] = f"AI Error: Hallucinated SKU(s) not found in inventory: {', '.join(invalid_skus)}"
+                    entry["decision"] = "Fallback: Manual review required."
+                    updates = {}
             except json.JSONDecodeError as je:
                 print(f"JSON Parse Error for {eid}. Raw content: {content}")
                 entry["inference"] = f"AI Error: Invalid JSON generated. Raw output: {content}"
@@ -358,8 +367,8 @@ If no CSV updates are needed, leave arrays empty. Return ONLY valid JSON, no mar
                     idx = inv_df.index[inv_df["item_id"] == item_id].tolist()
                     if idx:
                         inv_df.loc[idx[-1], "current_stock"] = current + change
-                    files_modified.add("inventory.csv")
-                    entry["files_updated"].append("inventory.csv")
+                        files_modified.add("inventory.csv")
+                        entry["files_updated"].append("inventory.csv")
                     
             for fin_upd in updates.get("finance_changes", []):
                 acc = fin_upd.get("account_name")
@@ -401,7 +410,7 @@ If no CSV updates are needed, leave arrays empty. Return ONLY valid JSON, no mar
             success = send_real_email(to_addr, subj, body)
             
             if success:
-                entry["actions"].append(f"Successfully sent real follow-up email to {to_addr}")
+                entry["actions"].append(f"Automatically sent follow-up email to {to_addr}")
                 entry["status"] = "Completed"
                 entry["guardrail_status"] = "Passed"
             else:

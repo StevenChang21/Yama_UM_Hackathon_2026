@@ -10,6 +10,7 @@ AI decision making and spam filtering is deferred to agent.py.
 
 import imaplib
 import email
+import email.message
 from email.header import decode_header
 import os
 import csv

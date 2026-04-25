@@ -5,22 +5,24 @@ import os
 import sys
 import pandas as pd
 
-# Force a fake API key before importing anything so email_reader.py initializes properly
-os.environ["ILMU_API_KEY"] = "fake-test-key-no-network-calls"
+# 1. FORCE a fake API key BEFORE importing anything. 
+os.environ["GEMINI_API_KEY"] = "fake-test-key-no-network-calls"
 
-# Import the modules we want to test
+# Add backend to path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 import email_reader
 import agent
+
+mock_global_ai = MagicMock()
+agent.ai_client = mock_global_ai
 
 class TestAgentPriorityMatrix(unittest.TestCase):
 
     def setUp(self):
-        # --- BULLETPROOF MOCKING ---
-        # Instead of using @patch decorators which cause import timing issues,
-        # we directly overwrite the ai_client in memory with our Mock.
-        self.mock_ai_client = MagicMock()
-        email_reader.ai_client = self.mock_ai_client
+        # Reset the global mock before each test so they don't contaminate each other
+        mock_global_ai.chat.completions.create.side_effect = None
+        mock_global_ai.chat.completions.create.return_value = None
 
         # We use a highly realistic supply-chain email to bypass the agent's spam filter
         self.mock_emails_df = pd.DataFrame([{
@@ -61,13 +63,14 @@ class TestAgentPriorityMatrix(unittest.TestCase):
         elif name == "bom.csv": return self.mock_bom_df
         return pd.DataFrame()
 
+    @patch('agent.send_real_email', return_value=True)
     @patch('agent.load_csv')
     @patch('agent.save_csv')
     @patch('agent.set_status')
     @patch('agent.os.path.exists')
-    @patch('agent.os.replace') 
-    @patch('builtins.open', new_callable=mock_open) 
-    def test_tc01_happy_case_end_to_end(self, mock_file, mock_os_replace, mock_exists, mock_set_status, mock_save_csv, mock_load_csv):
+    @patch('agent.os.replace')
+    @patch('builtins.open', new_callable=mock_open)
+    def test_tc01_happy_case_end_to_end(self, mock_file, mock_os_replace, mock_exists, mock_set_status, mock_save_csv, mock_load_csv, mock_send_email):
         """
         TC-01: Happy Case (Entire Flow). 
         Verifies system processes valid customer orders/restocks, updates CSVs, and drafts email.
@@ -98,8 +101,9 @@ class TestAgentPriorityMatrix(unittest.TestCase):
                 "finance_changes": [{"account_name": "Operating Cash", "balance_change": -500.0}]
             }
         })
-        # Use our pre-injected mock
-        self.mock_ai_client.chat.completions.create.return_value = mock_llm_response
+        
+        # Intercept using our global mock
+        mock_global_ai.chat.completions.create.return_value = mock_llm_response
 
         audit_log, files_modified = agent.process_emails()
 
@@ -121,7 +125,6 @@ class TestAgentPriorityMatrix(unittest.TestCase):
         TC-06: Spam and Noise Filtering.
         Verifies irrelevant emails do not trigger workflows or CSV mutations.
         """
-        # Inject an obvious spam email just for this test
         spam_df = pd.DataFrame([{
             "id": "EMAIL-999",
             "sender": "marketing@spammer.com",
@@ -152,7 +155,8 @@ class TestAgentPriorityMatrix(unittest.TestCase):
             "actions": [],
             "csv_updates": {}
         })
-        self.mock_ai_client.chat.completions.create.return_value = mock_llm_response
+        
+        mock_global_ai.chat.completions.create.return_value = mock_llm_response
 
         audit_log, files_modified = agent.process_emails()
 
@@ -181,7 +185,8 @@ class TestAgentPriorityMatrix(unittest.TestCase):
                 "inventory_changes": [{"item_id": "SKU-XYZ", "stock_change": 100}]
             }
         })
-        self.mock_ai_client.chat.completions.create.return_value = mock_llm_response
+        
+        mock_global_ai.chat.completions.create.return_value = mock_llm_response
 
         audit_log, files_modified = agent.process_emails()
 
@@ -203,7 +208,8 @@ class TestAgentPriorityMatrix(unittest.TestCase):
         mock_load_csv.side_effect = self._mock_load_csv_side_effect
         mock_exists.return_value = False
 
-        self.mock_ai_client.chat.completions.create.side_effect = Exception("Error code: 429 - Quota exceeded")
+        # Intercept exception using our global mock
+        mock_global_ai.chat.completions.create.side_effect = Exception("Error code: 429 - Quota exceeded")
 
         audit_log, files_modified = agent.process_emails()
 
