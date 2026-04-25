@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 account_name,balance_usd,notes,valid_from
 Operating Cash,120000.0,Available for procurement,2026-04-14 00:00
 Pending Payables,5000.0,Outstanding invoices,2026-04-14 00:00
@@ -15,3 +16,10 @@ Operating Cash,58050.0,AI Update from MSG-006,2026-04-25 14:55
 Operating Cash,52800.0,AI Update from MSG-012,2026-04-25 16:01
 Operating Cash,47550.0,AI Update from MSG-003,2026-04-25 17:02
 Pending Payables,31890.0,AI Update from MSG-002,2026-04-25 14:51
+=======
+account_name,balance_usd,notes
+Raw Material Reserve Fund,30000.0,Ring-fenced - manager approval above 20000
+Q2 Capex Budget,15000.0,Equipment only - not available for procurement
+Pending Payables,204229.0,AI Update from MSG-018
+Operating Cash,47050.0,AI Update from EMAIL-001
+>>>>>>> Stashed changes
