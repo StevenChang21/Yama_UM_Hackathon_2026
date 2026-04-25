@@ -179,10 +179,10 @@ def update_preferences(prefs: dict):
 # ── Agent Endpoints & Background Loop ───────────────────────────
 
 async def unified_background_loop():
-    """Background task that polls emails every 10 minutes and triggers the agent if new emails are found."""
+    """Background task that polls emails every 1 minute and triggers the agent if new emails are found."""
     from email_reader import process_emails as fetch_and_analyze_emails
     from agent import process_emails as run_agent_process
-    print("[Background] Starting 10-minute unified background poll loop...")
+    print("[Background] Starting 1-minute unified background poll loop...")
     while True:
         try:
             print(f"[Background] Polling for new emails at {datetime.now().isoformat()}...")
@@ -196,7 +196,7 @@ async def unified_background_loop():
                 print("[Background] No new work-related emails found. Agent skipped.")
         except Exception as e:
             print(f"[Background] Loop error: {e}")
-        await asyncio.sleep(600)  # 10 minutes
+        await asyncio.sleep(60)  # 1 minute
 
 @app.get("/api/agent/status")
 def get_agent_status():
