@@ -1,3 +1,8 @@
+# Runtime data files — never commit generated/live data
+*.csv
+backend/data/audit_log.json
+backend/data/agent_status.json
+
 # Environment variables
 .env
 

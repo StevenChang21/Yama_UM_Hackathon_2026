@@ -1,7 +1,0 @@
-supplier_id,supplier_name,item_id,item_name,unit_cost,delivery_days,payment_terms
-SUP-001,Alpha Metals,RAW-001,Microcontroller V2,15.50,14,Net30
-SUP-002,MotorTech,RAW-002,Steel Housing,5.0,7,Net45
-SUP-003,CasingWorks,RAW-003,Copper Winding Coil,8.75,10,Net30
-SUP-004,ElectroCore,RAW-004,Tempered Glass Panel,22.0,12,Net60
-SUP-005,WireLink,RAW-005,Circuit Board Assembly,31.0,5,Net30
-SUP-006,Backup Motors,RAW-002,Steel Housing,5.5,9,Net30
