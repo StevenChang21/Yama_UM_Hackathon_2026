@@ -114,6 +114,164 @@ class TestAgentPriorityMatrix(unittest.TestCase):
         self.assertIn("finance.csv", files_modified)
         self.assertTrue(any("Automatically sent follow-up email" in action for action in audit_log[0]["actions"]))
 
+    @patch('agent.send_real_email', return_value=False)  # Email send deliberately fails (no SMTP in test)
+    @patch('agent.load_csv')
+    @patch('agent.save_csv')
+    @patch('agent.set_status')
+    @patch('agent.os.path.exists')
+    @patch('agent.os.replace')
+    @patch('builtins.open', new_callable=mock_open)
+    def test_tc02_guardrail_invalid_order(
+        self, mock_file, mock_os_replace, mock_exists, mock_set_status,
+        mock_save_csv, mock_load_csv, mock_send_email
+    ):
+        """
+        TC-02: Guardrail Handling for Invalid Orders.
+        Verifies the system blocks unrealistic orders (1,000,000 units of SKU-A)
+        and handles them safely without corrupting any CSV.
+
+        Specification:
+          - Anomaly detected
+          - Autonomous approval blocked (no inventory/finance CSV writes)
+          - Follow-up email drafted and attempted
+          - No CSV corruption
+          - guardrail_status == 'Needs Review'
+        """
+        # ── Inject the extreme-quantity email ──────────────────────────────────
+        unrealistic_email_df = pd.DataFrame([{
+            "id": "EMAIL-TC02",
+            "sender": "sales@yamatech.com",
+            "subject": "Customer Order: 1,000,000 units of SKU-A",
+            "date": "2026-05-01T09:00:00",
+            "body": (
+                "Hi team, we just received a purchase order from MegaCorp for "
+                "1,000,000 units of SKU-A to be delivered within the week. "
+                "Please action immediately."
+            )
+        }])
+
+        def custom_load_csv(name):
+            if name == "emails.csv":
+                return unrealistic_email_df
+            return self._mock_load_csv_side_effect(name)
+
+        mock_load_csv.side_effect = custom_load_csv
+        mock_exists.return_value = False  # No pre-existing audit log
+
+        # ── AI response: anomaly detected, guardrail blocks autonomous action ──
+        mock_llm_response = MagicMock()
+        mock_llm_response.choices[0].message.content = json.dumps({
+            "is_spam": False,
+            "work_name": "Anomalous order: 1,000,000 units SKU-A — guardrail triggered",
+            "affected_source": "emails.csv",
+            "agent_description": (
+                "Order quantity of 1,000,000 units of SKU-A vastly exceeds current "
+                "raw material capacity and historical order patterns. Autonomous "
+                "approval blocked. Drafted follow-up requesting order verification."
+            ),
+            "reasoning_detail": (
+                "BOM analysis: SKU-A requires 2x RAW-001 per unit, meaning this order "
+                "would require 2,000,000 units of RAW-001 (current stock: 100). "
+                "This exceeds all budget thresholds and historical volumes by multiple "
+                "orders of magnitude — classified as anomalous. No CSV changes made."
+            ),
+            "preference_refs": ["Budget Constraints", "Urgent Customer Demand"],
+            "kpi_alignment": ["Anomaly prevention", "Fraud risk mitigation"],
+            "confidence": "High",
+            "guardrail_status": "Needs Review",
+            "alternative_considered": (
+                "Automatically processing the order was considered but rejected because "
+                "it would bankrupt the company and is almost certainly a data-entry error."
+            ),
+            "follow_up": {
+                "to": "sales@yamatech.com",
+                "subject": "Re: Customer Order — Verification Required",
+                "body": (
+                    "Hi team, the order for 1,000,000 units of SKU-A has been flagged "
+                    "as anomalous by our AI system. Please verify the quantity with the "
+                    "customer before we proceed. This order has been placed on hold "
+                    "pending human review."
+                ),
+                "reason": "Order quantity is unrealistically large — requires human verification."
+            },
+            "status": "Follow-Up Required",
+            "inference": (
+                "An order for 1,000,000 units of SKU-A has been received — this quantity "
+                "is anomalous and requires human review before any action is taken."
+            ),
+            "decision": (
+                "Block autonomous processing. Flag for human review. "
+                "Send verification request to the sales team."
+            ),
+            "actions": [
+                "Flagged order as anomalous due to unrealistic quantity (1,000,000 units)",
+                "Autonomous approval blocked — no inventory or finance changes made",
+                "Drafted follow-up email requesting order verification from sales team"
+            ],
+            "risks": [
+                "Potential data-entry error or fraudulent order from external party",
+                "Fulfillment impossible: 1,000,000 SKU-A requires 2,000,000 RAW-001 (stock: 100)"
+            ],
+            "csv_updates": {
+                "inventory_changes": [],   # No inventory changes — blocked by guardrail
+                "finance_changes": []       # No finance changes — blocked by guardrail
+            }
+        })
+        mock_global_ai.chat.completions.create.return_value = mock_llm_response
+
+        # ── Run the agent ──────────────────────────────────────────────────────
+        audit_log, files_modified = agent.process_emails()
+
+        # ── Assertions ────────────────────────────────────────────────────────
+        self.assertEqual(len(audit_log), 1, "Should produce exactly one audit entry")
+        entry = audit_log[0]
+
+        # 1. Anomaly detected — inference must mention the anomaly
+        self.assertIn(
+            "anomalous", entry["inference"].lower(),
+            "Inference should flag the order as anomalous"
+        )
+
+        # 2. Autonomous approval blocked — decision must mention blocking/review
+        decision_lower = entry["decision"].lower()
+        self.assertTrue(
+            "block" in decision_lower or "review" in decision_lower or "hold" in decision_lower,
+            f"Decision should indicate blocking or human review, got: {entry['decision']}"
+        )
+
+        # 3. Follow-up email drafted — follow_up must be populated
+        self.assertIsNotNone(
+            entry["follow_up"],
+            "A follow-up email must be drafted for anomalous orders"
+        )
+        self.assertIn("to", entry["follow_up"])
+        self.assertIn("subject", entry["follow_up"])
+        self.assertIn("body", entry["follow_up"])
+
+        # 4. No CSV corruption — no inventory or finance CSVs modified
+        self.assertNotIn(
+            "inventory.csv", files_modified,
+            "inventory.csv must NOT be modified when guardrail blocks the order"
+        )
+        self.assertNotIn(
+            "finance.csv", files_modified,
+            "finance.csv must NOT be modified when guardrail blocks the order"
+        )
+
+        # 5. guardrail_status == 'Needs Review'
+        self.assertEqual(
+            entry["guardrail_status"],
+            "Needs Review",
+            f"guardrail_status should be 'Needs Review', got '{entry['guardrail_status']}'"
+        )
+
+        # Bonus: status should be Follow-Up Required (not Completed)
+        self.assertEqual(
+            entry["status"],
+            "Follow-Up Required",
+            "Status should be 'Follow-Up Required' when email send fails and order is on hold"
+        )
+
     @patch('agent.load_csv')
     @patch('agent.save_csv')
     @patch('agent.set_status')
