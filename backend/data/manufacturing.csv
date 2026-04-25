@@ -1,0 +1,5 @@
+work_order_id,item_id,status,qty,eta,notes
+WO-001,SKU-A,In Progress,80,2026-04-26,Started production Apr 14. Consuming RAW-001 and RAW-004.
+WO-003,SKU-B,Blocked - Awaiting RAW-001,0,TBD,Cannot start. RAW-001 fully allocated to WO-001.
+WO-002,SKU-C,Halted - RAW-003 Exhausted,50,TBD,Stopped at 50/120 units when RAW-003 ran out.
+WO-004,SKU-D,Not Started - Awaiting Materials,0,TBD,Both RAW-002 and RAW-003 below threshold.

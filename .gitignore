@@ -1,5 +1,5 @@
-# Runtime data files — never commit generated/live data
-*.csv
+# Runtime-generated files — never commit live agent state
+backend/data/outbox.csv
 backend/data/audit_log.json
 backend/data/agent_status.json
 

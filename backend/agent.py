@@ -87,6 +87,32 @@ def get_current_balance(fin_df, account):
     row = fin_df[fin_df["account_name"] == account]
     return float(row["balance_usd"].iloc[0]) if len(row) > 0 else 0.0
 
+def next_po_id():
+    """Generate the next PO-XXXX id by reading purchase_orders.csv."""
+    po_path = os.path.join(DATA_DIR, "purchase_orders.csv")
+    if not os.path.exists(po_path):
+        return "PO-1001"
+    try:
+        df = pd.read_csv(po_path)
+        if df.empty:
+            return "PO-1001"
+        max_id = df["po_id"].str.replace("PO-", "").astype(int).max()
+        return f"PO-{max_id + 1}"
+    except Exception:
+        return "PO-1001"
+
+def append_purchase_orders(new_pos):
+    """Append a list of PO dicts to purchase_orders.csv."""
+    po_path = os.path.join(DATA_DIR, "purchase_orders.csv")
+    fieldnames = ["po_id", "supplier_id", "item_id", "quantity", "unit_price", "total_cost", "order_date", "expected_delivery", "status"]
+    file_exists = os.path.exists(po_path) and os.path.getsize(po_path) > 0
+    with open(po_path, "a", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        if not file_exists:
+            writer.writeheader()
+        for po in new_pos:
+            writer.writerow(po)
+
 def process_emails():
     set_status("Initializing agent and loading data...")
     emails_df = load_csv("emails.csv")
@@ -155,6 +181,12 @@ def process_emails():
         subject = str(email["subject"])
         date = str(email["date"])
         body = str(email["body"])
+        
+        # Limit input size to 8,000 words (system threshold)
+        words = body.split()
+        if len(words) > 8000:
+            body = " ".join(words[:8000]) + "\n\n[TRUNCATED: Input exceeded 8,000 words limit]"
+            print(f"Warning: Email {eid} body truncated (exceeded 8,000 words).")
         
         set_status("Analyzing context and reasoning with AI...", eid)
         print(f"Processing {eid} via AI...")
@@ -275,7 +307,9 @@ Analyze this email and decide the best action. Return ONLY a JSON object with th
   "risks": ["List of risks detected"],
   "csv_updates": {{
     "inventory_changes": [ {{"item_id": "...", "stock_change": 0}} ],
-    "finance_changes": [ {{"account_name": "Operating Cash" or "Pending Payables", "balance_change": 0}} ]
+    "sales_changes": [ {{"order_id": "...", "status": "Cancelled" or "Pending" or "Completed", "notes": "..."}} ]
+    "finance_changes": [ {{"account_name": "Operating Cash" or "Pending Payables", "balance_change": 0}} ],
+    "purchase_orders": [ {{"supplier_id": "SUP-XXX", "item_id": "RAW-XXX", "quantity": 0, "unit_price": 0.00}} ]
   }}
 }}
 
@@ -384,6 +418,52 @@ If no CSV updates are needed, leave arrays empty. Return ONLY valid JSON, no mar
                         fin_df.loc[idx[-1], "notes"] = f"AI Update from {eid}"
                     files_modified.add("finance.csv")
                     entry["files_updated"].append("finance.csv")
+            
+            for sales_upd in updates.get("sales_changes", []):
+                oid = sales_upd.get("order_id")
+                new_status = sales_upd.get("status")
+                new_notes = sales_upd.get("notes")
+                if oid:
+                    idx = sales_df.index[sales_df["order_id"] == oid].tolist()
+                    if idx:
+                        if new_status:
+                            sales_df.loc[idx[-1], "status"] = new_status
+                        if new_notes:
+                            sales_df.loc[idx[-1], "notes"] = new_notes
+                        files_modified.add("sales.csv")
+                        entry["files_updated"].append("sales.csv")
+
+            # Process Purchase Orders
+            new_pos = []
+            for po_req in updates.get("purchase_orders", []):
+                sup_id = po_req.get("supplier_id", "")
+                item_id = po_req.get("item_id", "")
+                qty = po_req.get("quantity", 0)
+                unit_price = po_req.get("unit_price", 0.0)
+                if qty > 0 and item_id:
+                    sup_row = sup_df[(sup_df["supplier_id"] == sup_id) & (sup_df["item_id"] == item_id)]
+                    delivery_days = int(sup_row["delivery_days"].iloc[0]) if len(sup_row) > 0 else 14
+                    from datetime import timedelta
+                    order_date = datetime.now().strftime("%Y-%m-%d")
+                    expected = (datetime.now() + timedelta(days=delivery_days)).strftime("%Y-%m-%d")
+                    po_id = next_po_id()
+                    total = round(qty * unit_price, 2)
+                    new_pos.append({
+                        "po_id": po_id,
+                        "supplier_id": sup_id,
+                        "item_id": item_id,
+                        "quantity": qty,
+                        "unit_price": unit_price,
+                        "total_cost": total,
+                        "order_date": order_date,
+                        "expected_delivery": expected,
+                        "status": "Pending"
+                    })
+                    entry["actions"].append(f"Created {po_id}: {qty}x {item_id} from {sup_id} @ ${unit_price}/unit (total ${total})")
+            if new_pos:
+                append_purchase_orders(new_pos)
+                files_modified.add("purchase_orders.csv")
+                entry["files_updated"].append("purchase_orders.csv")
                     
         except Exception as e:
             entry["inference"] = f"AI Error: {e}"
@@ -436,6 +516,7 @@ If no CSV updates are needed, leave arrays empty. Return ONLY valid JSON, no mar
     save_csv("inventory.csv", inv_df)
     save_csv("manufacturing.csv", mfg_df)
     save_csv("finance.csv", fin_df)
+    save_csv("sales.csv", sales_df)
 
     set_status("Idle", None)
     return audit_log, list(files_modified)

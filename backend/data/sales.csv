@@ -1,0 +1,6 @@
+order_id,customer,item_id,qty,status,due_date,notes
+ORD-105,NexGen Robotics,SKU-D,100,Pending,2026-05-10,Original order - no changes
+ORD-101,AutoParts Corp,SKU-A,500,Pending,2026-05-05,Revised up from 300 - larger downstream contract
+ORD-104,NexGen Robotics,SKU-C,250,Pending,2026-05-10,Revised up from 150 - expanded pilot to 4 sites
+ORD-102,AutoParts Corp,SKU-B,100,Pending,2026-05-05,Revised down from 200 - substituting with SKU-D
+ORD-103,AutoParts Corp,SKU-D,100,Pending,2026-05-05,New line item replacing 100 units of SKU-B
