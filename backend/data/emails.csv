@@ -1,30 +1,4 @@
 id,sender,subject,date,body
-EMAIL-001,warehouse@yamatech.com,Damaged Stock Report - RAW-001,2026-04-25T08:00:00,"Hi team, during this morning's pallet inspection, we found a severe roof leak over aisle 4. Unfortunately, 50 units of RAW-001 have been completely ruined by water damage and are unusable. We have disposed of them. Please adjust the system inventory to reflect this loss and account for a $500 write-off."
-EMAIL-003,sales@yamatech.com,VIP Rush Request: SKU-A,2026-04-25T10:30:00,Our Tier-1 VIP customer just called. They desperately need an extra 200 units of SKU-A shipped by next Tuesday. Do we have enough raw materials (RAW-1 and RAW-2) in stock to squeeze this into the manufacturing schedule? Let me know ASAP so I can confirm the sale with them.
-MSG-016,Delays for crude oil raw materials,"Sat, 25 Apr 2026 18:15:59 +0800",Steven Chang <changstevenn@gmail.com>,"Due to the blockage of strait of hormuz, the crude oil freight
-transportation is delayed to 1 month instead of 15 days, kindly take note
-and plan ahead.
-
-Best regards,
-Juan Baby Oil Inc."
-MSG-017,New sales order 067,"Sat, 25 Apr 2026 18:20:32 +0800",Steven Chang <changstevenn@gmail.com>,"Dear inventory team,
-
-New customer Moonway recent ordered 30 units sku-A need by next week and
-100 units sku-A reserved for middle of next month. The 30 sku-A order is
-fully paid, the 100 units order has paid 50% as deposit.
-
-Please confirm me, i need confirm customer before tonight whether can
-fulfill or not
-
-Thanks,
-Best Regards"
-<<<<<<< Updated upstream
-MSG-018,darren <darrentph045@gmail.com>,order,"Sat, 25 Apr 2026 19:16:33 +0800",I want to order sku-a. company is abcd
-=======
-MSG-018,purchaseee,"Sat, 25 Apr 2026 18:40:27 +0800",Ern Teh <eteh0010@student.monash.edu>,"Dear yama tech,
-I am from hehehaha company, i would like to purchase 125 units of SKU-A,
-337 units of SKU-D,  337 units of SKU-B  I would like all of these
-purchases to arrive by 30th May 2026 at Monash University.
-
-thanks"
->>>>>>> Stashed changes
+EMAIL-100,changstevenn@gmail.com,Alpha Metals (SUP-001) Expedited Shipping Offer,2026-04-26T10:00:00,"Hi YamaTech Procurement, this is Steven from Alpha Metals. We noticed you might be running low on Microcontroller V2 due to recent market constraints. We can offer an expedited shipment of up to 2000 units if you send over a Purchase Order today by replying to this email."
+EMAIL-101,sales@yamatech.com,URGENT: VIP Client NexGen Robotics Order,2026-04-26T09:00:00,"URGENT: VIP Client 'NexGen Robotics' just requested 500 units of SKU-C to be delivered ASAP. Please confirm if we can fulfill this and procure any necessary raw materials immediately to unblock production."
+EMAIL-102,warehouse@yamatech.com,Incident Report: Destroyed Raw Materials,2026-04-26T09:30:00,"Incident Report: A forklift accident just destroyed 500 units of RAW-001 (Microcontroller V2). We need to write this off and replenish stock immediately, otherwise production for SKU-C and SKU-A will halt."
