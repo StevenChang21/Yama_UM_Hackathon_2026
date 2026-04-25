@@ -283,9 +283,9 @@ CRITICAL ACCOUNTING RULES:
 1. If you place an order with a supplier, you MUST use the exact unit cost from the 'Approved Suppliers & Pricing' list.
 2. If the supplier's payment_terms are 'Net30', 'Net45', or 'Net60', you MUST increase 'Pending Payables' instead of immediately deducting from 'Operating Cash'. Only deduct from 'Operating Cash' if terms require immediate payment.
 
-If you need to send a follow-up email because information is missing, set follow_up to:
-{{"to": "recipient@email.com", "subject": "...", "body": "...", "reason": "Why follow-up is needed"}}
-and set status to "Follow-Up Required".
+If you need to send an email to a supplier or customer (e.g., to send a Purchase Order, confirm fulfillment, or ask for clarification), set follow_up to:
+{{"to": "recipient@email.com", "subject": "...", "body": "...", "reason": "Why this email is being sent"}}
+If you are asking for clarification, set status to "Follow-Up Required". If you are executing a decision (like sending a PO), set status to "Completed".
 
 If no CSV updates are needed, leave arrays empty. Return ONLY valid JSON, no markdown.
 """
