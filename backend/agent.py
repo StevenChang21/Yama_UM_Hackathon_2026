@@ -113,8 +113,11 @@ def process_emails():
     pref_path = os.path.join(DATA_DIR, "preferences.json")
     prefs = {}
     if os.path.exists(pref_path):
-        with open(pref_path, "r") as f:
-            prefs = json.load(f)
+        try:
+            with open(pref_path, "r") as f:
+                prefs = json.load(f)
+        except (json.JSONDecodeError, Exception):
+            prefs = {}
             
     # Format dynamic rules
     rules = prefs.get("rules", [
@@ -389,23 +392,28 @@ If no CSV updates are needed, leave arrays empty. Return ONLY valid JSON, no mar
 
         # Auto-send email logic
         if entry.get("follow_up"):
-            import csv
             to_addr = entry["follow_up"].get("to", "")
             subj = entry["follow_up"].get("subject", "")
             body = entry["follow_up"].get("body", "")
             reason = entry["follow_up"].get("reason", "")
-            
-            outbox_path = os.path.join(DATA_DIR, "outbox.csv")
-            with open(outbox_path, 'a', newline='', encoding='utf-8') as csvfile:
-                writer = csv.writer(csvfile)
-                writer.writerow([
-                    datetime.now().isoformat(),
-                    to_addr,
-                    subj,
-                    body,
-                    reason
-                ])
-                
+
+            try:
+                outbox_path = os.path.join(DATA_DIR, "outbox.csv")
+                write_header = not os.path.exists(outbox_path)
+                with open(outbox_path, 'a', newline='', encoding='utf-8') as csvfile:
+                    writer = csv.writer(csvfile)
+                    if write_header:
+                        writer.writerow(["timestamp", "to", "subject", "body", "reason"])
+                    writer.writerow([
+                        datetime.now().isoformat(),
+                        to_addr,
+                        subj,
+                        body,
+                        reason
+                    ])
+            except Exception as e:
+                print(f"Failed to log outbox entry for {eid}: {e}")
+
             # Send the actual email
             success = send_real_email(to_addr, subj, body)
             
