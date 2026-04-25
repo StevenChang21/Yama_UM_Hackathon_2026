@@ -86,6 +86,10 @@ def process_emails():
     active_kpis = [k for k, v in kpis.items() if v]
     pref_lines.append(f"Active KPIs to protect: {', '.join(active_kpis) if active_kpis else 'None'}")
     
+    custom_rules = prefs.get("customRules", "").strip()
+    if custom_rules:
+        pref_lines.append(f"CUSTOM RULES:\n{custom_rules}")
+    
     dynamic_prefs_str = "\n".join(pref_lines)
 
     for _, email in emails_df.iterrows():

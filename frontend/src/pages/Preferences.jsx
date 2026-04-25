@@ -189,6 +189,9 @@ const Preferences = () => {
   });
   const toggleAllocRule = (k) => setAllocRules((s) => ({ ...s, [k]: !s[k] }));
 
+  /* ── Custom Rules Input ── */
+  const [customRules, setCustomRules] = useState("");
+
   /* ── Fetch Preferences on Load ── */
   useEffect(() => {
     fetch(`${API}/api/preferences`)
@@ -201,6 +204,7 @@ const Preferences = () => {
         if (data.supplierWeights) setSupplierWeights(data.supplierWeights);
         if (data.kpis) setKpis(data.kpis);
         if (data.allocRules) setAllocRules(data.allocRules);
+        if (data.customRules) setCustomRules(data.customRules);
       })
       .catch(err => console.error("Failed to fetch preferences:", err));
   }, []);
@@ -218,7 +222,8 @@ const Preferences = () => {
       reorderQty,
       supplierWeights,
       kpis,
-      allocRules
+      allocRules,
+      customRules
     };
     try {
       await fetch(`${API}/api/preferences`, {
@@ -287,7 +292,16 @@ const Preferences = () => {
               <span className="pref-rule-grip"><GripVertical size={16} /></span>
               <span className="pref-rule-rank">{idx + 1}</span>
               <span className="pref-rule-icon" style={{ color: rule.color }}>{rule.icon}</span>
-              <span className="pref-rule-label">{rule.label}</span>
+              <input 
+                type="text"
+                className="pref-rule-label-input"
+                value={rule.label}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setRules(prev => prev.map((r, i) => i === idx ? { ...r, label: val } : r));
+                }}
+                title="Edit rule label"
+              />
               <span className="pref-rule-priority-badge" style={{ background: `${rule.color}18`, color: rule.color }}>
                 {idx === 0 ? "HIGHEST" : idx === rules.length - 1 ? "LOWEST" : `P${idx + 1}`}
               </span>
@@ -411,6 +425,17 @@ const Preferences = () => {
               </label>
             </div>
           ))}
+        </div>
+        <div className="pref-custom-rules-container">
+          <h4>Custom Allocation Rules</h4>
+          <p>Provide any additional custom logic or instructions for the agent here.</p>
+          <textarea
+            className="pref-custom-rules-input"
+            value={customRules}
+            onChange={(e) => setCustomRules(e.target.value)}
+            placeholder="e.g. Always source RAW-003 from secondary suppliers if primary lead time is over 10 days..."
+            rows={4}
+          />
         </div>
       </CollapsibleSection>
     </div>
