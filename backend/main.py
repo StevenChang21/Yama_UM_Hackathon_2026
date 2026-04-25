@@ -23,11 +23,14 @@ from email_reader import (
 # Start the email poll loop as a background task when the app starts
 @asynccontextmanager
 async def lifespan(app):
-    # Startup: launch email polling background task
-    task = asyncio.create_task(email_poll_loop())
+    from main import run_agent_loop
+    # Startup: launch email polling background task and agent processing loop
+    task1 = asyncio.create_task(email_poll_loop())
+    task2 = asyncio.create_task(run_agent_loop())
     yield
-    # Shutdown: cancel the background task
-    task.cancel()
+    # Shutdown: cancel the background tasks
+    task1.cancel()
+    task2.cancel()
 
 app = FastAPI(title="AI Inventory Replenishment API", lifespan=lifespan)
 
