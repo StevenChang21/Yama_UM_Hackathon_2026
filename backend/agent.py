@@ -336,6 +336,15 @@ If no CSV updates are needed, leave arrays empty. Return ONLY valid JSON, no mar
                 entry["follow_up"] = res.get("follow_up", None)
                 entry["status"] = res.get("status", "Completed" if res.get("actions") else "In Progress")
                 updates = res.get("csv_updates", {})
+                
+                # Check Guardrails: P1 Critical Budget Constraint
+                for fin_upd in updates.get("finance_changes", []):
+                    if abs(fin_upd.get("balance_change", 0)) > 185000:
+                        entry["guardrail_status"] = "Blocked"
+                        entry["status"] = "Needs Review"
+                        entry["risks"].append("BLOCKED: Transaction exceeds the $185,000 budget constraint threshold.")
+                        updates = {}  # Block all CSV updates
+                        break
             except json.JSONDecodeError as je:
                 print(f"JSON Parse Error for {eid}. Raw content: {content}")
                 entry["inference"] = f"AI Error: Invalid JSON generated. Raw output: {content}"
