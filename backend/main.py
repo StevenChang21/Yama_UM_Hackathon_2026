@@ -1,5 +1,6 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
 from contextlib import asynccontextmanager
 import pandas as pd
 from datetime import datetime, timedelta
@@ -8,6 +9,8 @@ import json
 import random
 import os
 from orchestrator import process_orchestration
+
+load_dotenv()
 from email_reader import (
     email_poll_loop,
     process_emails,
