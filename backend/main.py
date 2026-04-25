@@ -10,8 +10,10 @@ import asyncio
 import json
 import random
 import os
-from orchestrator import process_orchestration
+from orchestrator.orchestrator import process_orchestration
+from orchestrator.data_repository import DataRepository
 
+repo = DataRepository(os.path.join(os.path.dirname(__file__), "data"))
 load_dotenv()
 from email_reader import (
     email_poll_loop,
@@ -63,10 +65,10 @@ def read_root():
 def get_inventory():
     """Returns the current inventory status, highlighting items at risk."""
     try:
-        df = pd.read_csv(os.path.join("data", "inventory.csv"))
-        df = _latest_per_group(df, "valid_from", "item_id")
+        data = repo.get_inventory_data()
+        inventory_items = data.get("inventory", [])
         inventory_status = []
-        for _, item in df.iterrows():
+        for item in inventory_items:
             risk_level = "High" if item["current_stock"] <= item["reorder_point"] else "Low"
             inventory_status.append({
                 "id": item["item_id"],
@@ -78,42 +80,38 @@ def get_inventory():
                 "risk_level": risk_level
             })
         return inventory_status
-    except Exception:
+    except Exception as e:
+        print(f"Error fetching inventory: {e}")
         return MOCK_ITEMS
 
 @app.get("/api/finance")
 def get_finance():
     try:
-        df = pd.read_csv(os.path.join("data", "finance.csv"))
-        df = _latest_per_group(df, "valid_from", "account_name")
-        return [{"account_name": row["account_name"], "balance_usd": row["balance_usd"]} for _, row in df.iterrows()]
+        return repo.get_finance_data()
     except Exception as e:
         return {"error": str(e)}
 
 @app.get("/api/sales")
 def get_sales():
     try:
-        df = pd.read_csv(os.path.join("data", "sales.csv"))
-        df = _latest_per_group(df, "valid_from", "order_id")
-        return [{"order_id": s["order_id"], "sku": s["item_id"], "qty": s["qty"], "status": s["status"], "due_date": s["due_date"]} for _, s in df.iterrows()]
+        data = repo.get_sales_data()
+        return [{"order_id": s["order_id"], "sku": s["item_id"], "qty": s["qty"], "status": s["status"], "due_date": s["due_date"]} for s in data]
     except Exception as e:
         return {"error": str(e)}
 
 @app.get("/api/manufacturing")
 def get_manufacturing():
     try:
-        df = pd.read_csv(os.path.join("data", "manufacturing.csv"))
-        df = _latest_per_group(df, "valid_from", "work_order_id")
-        return [{"work_order_id": r["work_order_id"], "sku": r["item_id"], "status": r["status"], "pending_units": r["qty"], "eta": r["eta"]} for _, r in df.iterrows()]
+        data = repo.get_manufacturing_data()
+        return [{"work_order_id": r["work_order_id"], "sku": r["item_id"], "status": r["status"], "pending_units": r["qty"], "eta": r["eta"]} for r in data]
     except Exception as e:
         return {"error": str(e)}
 
 @app.get("/api/logistics")
 def get_logistics():
     try:
-        df = pd.read_csv(os.path.join("data", "logistics.csv"))
-        df = _latest_per_group(df, "valid_from", "resource")
-        return [{"resource": r["resource"], "status": r["status"], "availability_date": r["availability_date"]} for _, r in df.iterrows()]
+        data = repo.get_logistics_data()
+        return [{"resource": r["resource"], "status": r["status"], "availability_date": r["availability_date"]} for r in data]
     except Exception as e:
         return {"error": str(e)}
 

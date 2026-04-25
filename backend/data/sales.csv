@@ -1,4 +1,4 @@
-order_id,customer,item_id,qty,status,due_date,notes,valid_from,revision
+order_id,customer,item_id,qty,status,due_date,notes,timestamp,revision
 ORD-101,AutoParts Corp,SKU-A,300,Pending,2026-05-05,Initial order,2026-04-14 09:15,1
 ORD-102,AutoParts Corp,SKU-B,200,Pending,2026-05-05,Initial order,2026-04-14 09:15,1
 ORD-104,NexGen Robotics,SKU-C,150,Pending,2026-05-10,Initial order - pilot deployment,2026-04-16 14:30,1

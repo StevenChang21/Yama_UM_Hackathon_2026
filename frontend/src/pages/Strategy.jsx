@@ -125,9 +125,9 @@ const Strategy = () => {
             <div style={{ display: "flex", gap: "1rem" }}>
               <div style={{ color: "var(--bosch-red)" }}><AlertOctagon size={20} /></div>
               <div>
-                <h4 style={{ margin: 0, fontSize: "1rem", fontWeight: 600 }}>No Destructive Writes</h4>
+                <h4 style={{ margin: 0, fontSize: "1rem", fontWeight: 600 }}>Consistent Data Operations</h4>
                 <p style={{ margin: "0.25rem 0 0 0", fontSize: "0.875rem", color: "var(--text-secondary)" }}>
-                  The AI must use an append-only architecture for database mutations. Original records are never deleted; new rows are appended with updated <code>valid_from</code> timestamps.
+                  The AI leverages Pydantic data classes for database mutations. Inventory and finance records are updated in-place via primary key, while sales and manufacturing records append new rows tracking the latest <code>timestamp</code>.
                 </p>
               </div>
             </div>

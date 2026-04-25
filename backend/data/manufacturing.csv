@@ -1,4 +1,4 @@
-work_order_id,item_id,status,qty,eta,notes,valid_from
+work_order_id,item_id,status,qty,eta,notes,timestamp
 WO-001,SKU-A,In Progress,80,2026-04-26,Started production Apr 14. Consuming RAW-001 and RAW-004.,2026-04-14 09:15
 WO-003,SKU-B,Planned,200,2026-04-30,Planned for ORD-102. RAW-001 allocated to WO-001 first.,2026-04-14 09:15
 WO-002,SKU-C,Planned,120,2026-04-28,Scheduled after ORD-104 confirmed,2026-04-16 14:30
