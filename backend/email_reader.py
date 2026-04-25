@@ -116,7 +116,7 @@ Respond ONLY with a JSON object:
 
     try:
         response = ai_client.chat.completions.create(
-            model="nemo-super",
+            model="ilmu-glm-5.1",
             messages=[
                 {"role": "system", "content": "You are a supply chain email analyzer. Respond only with valid JSON."},
                 {"role": "user", "content": prompt},

@@ -1,11 +1,12 @@
 account_name,balance_usd,notes,valid_from
-Operating Cash,120000.00,Available for procurement,2026-04-14 00:00
-Pending Payables,5000.00,Outstanding invoices,2026-04-14 00:00
-Raw Material Reserve Fund,30000.00,Ring-fenced - manager approval above 20000,2026-04-14 00:00
-Q2 Capex Budget,15000.00,Equipment only - not available for procurement,2026-04-14 00:00
-Operating Cash,100000.00,Reduced by initial production run costs,2026-04-18 10:00
-Pending Payables,12000.00,Includes WO-001 materials,2026-04-18 10:00
-Operating Cash,85000.00,Available for procurement,2026-04-23 08:00
-Pending Payables,22500.00,Outstanding invoices to existing suppliers,2026-04-23 08:00
-Raw Material Reserve Fund,30000.00,Ring-fenced - manager approval above 20000,2026-04-23 08:00
-Q2 Capex Budget,15000.00,Equipment only - not available for procurement,2026-04-23 08:00
+Operating Cash,120000.0,Available for procurement,2026-04-14 00:00
+Pending Payables,5000.0,Outstanding invoices,2026-04-14 00:00
+Raw Material Reserve Fund,30000.0,Ring-fenced - manager approval above 20000,2026-04-14 00:00
+Q2 Capex Budget,15000.0,Equipment only - not available for procurement,2026-04-14 00:00
+Operating Cash,100000.0,Reduced by initial production run costs,2026-04-18 10:00
+Pending Payables,12000.0,Includes WO-001 materials,2026-04-18 10:00
+Operating Cash,85000.0,Available for procurement,2026-04-23 08:00
+Pending Payables,22500.0,Outstanding invoices to existing suppliers,2026-04-23 08:00
+Raw Material Reserve Fund,30000.0,Ring-fenced - manager approval above 20000,2026-04-23 08:00
+Q2 Capex Budget,15000.0,Equipment only - not available for procurement,2026-04-23 08:00
+Operating Cash,79750.0,AI Update from MSG-003,2026-04-16 17:45

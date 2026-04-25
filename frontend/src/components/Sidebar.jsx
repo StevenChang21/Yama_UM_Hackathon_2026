@@ -7,6 +7,8 @@ import {
   Lightbulb,
   History,
   Truck,
+  Activity,
+  Settings2,
 } from "lucide-react";
 
 const Sidebar = () => {
@@ -15,6 +17,11 @@ const Sidebar = () => {
       name: "Dashboard",
       path: "/dashboard",
       icon: <LayoutDashboard size={20} />,
+    },
+    {
+      name: "Control Centre",
+      path: "/control-centre",
+      icon: <Activity size={20} />,
     },
     {
       name: "Inventory",
@@ -29,6 +36,7 @@ const Sidebar = () => {
     },
     { name: "History", path: "/history", icon: <History size={20} /> },
     { name: "Suppliers", path: "/suppliers", icon: <Truck size={20} /> },
+    { name: "Preferences", path: "/preferences", icon: <Settings2 size={20} /> },
   ];
 
   return (

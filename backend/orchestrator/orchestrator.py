@@ -99,7 +99,9 @@ class Orchestrator:
                 # That's why it has .tool_calls, .content, .model_dump()
                 message = self._llm.chat_completion(messages, self._tools.get_openai_schemas())
             except Exception as e:
-                await reporter.error(f"ILMU API Error: {str(e)}")
+                # ILMU API unreachable → fall back to mock result so the UI still works
+                await reporter.status(f"ILMU API unavailable ({e}). Falling back to mock recommendation...")
+                await self._run_mock(reporter)
                 return
 
             if message.tool_calls:

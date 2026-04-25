@@ -1,30 +1,17 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
-from contextlib import asynccontextmanager
 import pandas as pd
+from dotenv import load_dotenv
 from datetime import datetime, timedelta
 import asyncio
 import json
 import random
 import os
 from orchestrator import process_orchestration
-from email_reader import (
-    email_poll_loop,
-    process_emails,
-    get_all_alerts,
-    clear_alerts,
-)
 
-# Start the email poll loop as a background task when the app starts
-@asynccontextmanager
-async def lifespan(app):
-    # Startup: launch email polling background task
-    task = asyncio.create_task(email_poll_loop())
-    yield
-    # Shutdown: cancel the background task
-    task.cancel()
+load_dotenv()
 
-app = FastAPI(title="AI Inventory Replenishment API", lifespan=lifespan)
+app = FastAPI(title="AI Inventory Replenishment API")
 
 # Setup CORS for the frontend
 app.add_middleware(
@@ -142,6 +129,55 @@ def delete_email_alerts():
     clear_alerts()
     return {"status": "cleared"}
 
+
+# ── Agent Endpoints & Background Loop ───────────────────────────
+
+@app.on_event("startup")
+async def startup_event():
+    # Start the agent background loop
+    asyncio.create_task(run_agent_loop())
+
+async def run_agent_loop():
+    """Background task that runs the agent every 10 minutes."""
+    from agent import process_emails as run_agent_process
+    print("[Agent] Starting 10-minute background poll loop...")
+    while True:
+        try:
+            print("[Agent] Triggering background agent run...")
+            await asyncio.to_thread(run_agent_process)
+        except Exception as e:
+            print(f"[Agent] Loop error: {e}")
+        await asyncio.sleep(10)  # 10 seconds for live demo
+
+@app.get("/api/agent/status")
+def get_agent_status():
+    """Returns what the agent is currently doing."""
+    status_path = os.path.join("data", "agent_status.json")
+    if os.path.exists(status_path):
+        with open(status_path) as f:
+            return json.load(f)
+    return {"status": "Idle", "current_email": None}
+
+@app.post("/api/agent/run")
+async def run_agent():
+    """Run the autonomous AI operations agent on emails.csv."""
+    from agent import process_emails as run_agent_process
+    audit_log, files_modified = await asyncio.to_thread(run_agent_process)
+    return {
+        "status": "completed",
+        "emails_processed": len(audit_log),
+        "files_modified": files_modified,
+        "audit_log": audit_log,
+    }
+
+@app.get("/api/agent/audit-log")
+def get_audit_log():
+    """Return the last saved audit log."""
+    log_path = os.path.join("data", "audit_log.json")
+    if os.path.exists(log_path):
+        with open(log_path) as f:
+            return json.load(f)
+    return []
 
 @app.post("/api/analyze")
 async def analyze_input(text: str = Form(None), file: UploadFile = File(None)):
