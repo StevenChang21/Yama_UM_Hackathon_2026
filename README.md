@@ -18,6 +18,15 @@ IMAP_EMAIL=your_email@gmail.com     # Your email address
 IMAP_PASSWORD=your_app_password     # The app password generated for the account
 ```
 
+> **For Judges — Pre-configured Demo Credentials**
+> We've set up a dedicated Gmail account so you don't need to configure your own. Use these values directly in your `.env`:
+> ```ini
+> IMAP_SERVER=imap.gmail.com
+> IMAP_PORT=993
+> IMAP_EMAIL=yamahackathon@gmail.com
+> IMAP_PASSWORD=plcq rpnf zouk hxmv
+> ```
+
 ### Running the Backend
 
 1. Navigate to the backend directory:
