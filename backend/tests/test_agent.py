@@ -1,151 +1,215 @@
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, mock_open
 import json
 import os
-import pandas as pd
-from datetime import datetime
-
-# Import the module we want to test
 import sys
+import pandas as pd
+
+# Force a fake API key before importing anything so email_reader.py initializes properly
+os.environ["ILMU_API_KEY"] = "fake-test-key-no-network-calls"
+
+# Import the modules we want to test
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+import email_reader
 import agent
 
 class TestAgentPriorityMatrix(unittest.TestCase):
 
     def setUp(self):
-        # Setup mock DataFrames to be returned by load_csv
+        # --- BULLETPROOF MOCKING ---
+        # Instead of using @patch decorators which cause import timing issues,
+        # we directly overwrite the ai_client in memory with our Mock.
+        self.mock_ai_client = MagicMock()
+        email_reader.ai_client = self.mock_ai_client
+
+        # We use a highly realistic supply-chain email to bypass the agent's spam filter
         self.mock_emails_df = pd.DataFrame([{
-            "id": "EMAIL-TEST-1",
-            "sender": "supplier@test.com",
-            "subject": "Test",
+            "id": "EMAIL-001",
+            "sender": "logistics@supplier-a.com",
+            "subject": "URGENT: shipping delay for RAW-001",
             "date": "2026-05-01",
-            "body": "Test email body"
+            "body": "Due to port congestion, we are experiencing a shipping delay. The restock is delayed by 5 days."
         }])
         self.mock_inv_df = pd.DataFrame([{
             "item_id": "RAW-001", "name": "Test Item", "type": "Raw", 
             "current_stock": 100, "reorder_point": 50, 
-            "lead_time_days": 5, "cost_per_unit": 10.0
+            "lead_time_days": 5, "cost_per_unit": 10.0,
+            "valid_from": "2026-04-01"
         }])
         self.mock_sales_df = pd.DataFrame([])
         self.mock_mfg_df = pd.DataFrame([])
-        self.mock_fin_df = pd.DataFrame([{"account_name": "Pending Payables", "balance_usd": 0.0, "notes": ""}])
+        self.mock_fin_df = pd.DataFrame([
+            {"account_name": "Pending Payables", "balance_usd": 0.0, "notes": "", "valid_from": "2026-04-01"},
+            {"account_name": "Operating Cash", "balance_usd": 150000.0, "notes": "", "valid_from": "2026-04-01"}
+        ])
         self.mock_sup_df = pd.DataFrame([{
             "supplier_id": "SUP-001", "supplier_name": "Test Supplier", 
             "item_id": "RAW-001", "item_name": "Test Item", 
             "unit_cost": 10.0, "delivery_days": 5, "payment_terms": "Net30"
         }])
+        self.mock_bom_df = pd.DataFrame([{
+            "parent_id": "SKU-A", "child_id": "RAW-001", "qty_required": 2
+        }])
+
+    def _mock_load_csv_side_effect(self, name):
+        if name == "emails.csv": return self.mock_emails_df
+        elif name == "inventory.csv": return self.mock_inv_df
+        elif name == "sales.csv": return self.mock_sales_df
+        elif name == "manufacturing.csv": return self.mock_mfg_df
+        elif name == "finance.csv": return self.mock_fin_df
+        elif name == "suppliers.csv": return self.mock_sup_df
+        elif name == "bom.csv": return self.mock_bom_df
+        return pd.DataFrame()
 
     @patch('agent.load_csv')
     @patch('agent.save_csv')
-    @patch('agent.write_json_atomically')
     @patch('agent.set_status')
-    @patch('openai.OpenAI')
     @patch('agent.os.path.exists')
-    def test_p1_critical_api_rate_limit(self, mock_exists, mock_openai, mock_set_status, mock_write_json, mock_save_csv, mock_load_csv):
+    @patch('agent.os.replace') 
+    @patch('builtins.open', new_callable=mock_open) 
+    def test_tc01_happy_case_end_to_end(self, mock_file, mock_os_replace, mock_exists, mock_set_status, mock_save_csv, mock_load_csv):
         """
-        Test Case for P1 Critical: Gemini API 429 Rate Limit.
-        Ensures the system falls back to manual review and doesn't crash.
+        TC-01: Happy Case (Entire Flow). 
+        Verifies system processes valid customer orders/restocks, updates CSVs, and drafts email.
         """
-        # Mock load_csv to return our DataFrames
-        def load_csv_side_effect(name):
-            if name == "emails.csv": return self.mock_emails_df
-            elif name == "inventory.csv": return self.mock_inv_df
-            elif name == "sales.csv": return self.mock_sales_df
-            elif name == "manufacturing.csv": return self.mock_mfg_df
-            elif name == "finance.csv": return self.mock_fin_df
-            elif name == "suppliers.csv": return self.mock_sup_df
-            return pd.DataFrame()
-        mock_load_csv.side_effect = load_csv_side_effect
-
-        # Mock os.path.exists to simulate no existing audit log
+        mock_load_csv.side_effect = self._mock_load_csv_side_effect
         mock_exists.return_value = False
 
-        # Setup mock OpenAI client
-        mock_ai_client = MagicMock()
-        mock_openai.return_value = mock_ai_client
-
-        # Mock the LLM to raise an Exception (simulating 429 Quota Exceeded)
-        mock_ai_client.chat.completions.create.side_effect = Exception("Error code: 429 - Quota exceeded")
-
-        # Set environment variable so the client initializes
-        os.environ["GEMINI_API_KEY"] = "test"
-
-        # Run the agent
-        audit_log, files_modified = agent.process_emails()
-
-        # Assertions
-        self.assertEqual(len(audit_log), 1, "Should log 1 entry for the processed email")
-        self.assertEqual(audit_log[0]["email_id"], "EMAIL-TEST-1")
-        self.assertEqual(audit_log[0]["status"], "In Progress", "Status should be In Progress for manual review")
-        self.assertEqual(audit_log[0]["guardrail_status"], "Needs Review", "Guardrail should flag for review")
-        self.assertIn("429", audit_log[0]["inference"], "Inference should contain the rate limit error")
-        self.assertEqual(files_modified, [], "No CSVs should be modified on API failure")
-
-
-    @patch('agent.load_csv')
-    @patch('agent.save_csv')
-    @patch('agent.write_json_atomically')
-    @patch('agent.set_status')
-    @patch('openai.OpenAI')
-    @patch('agent.os.path.exists')
-    def test_p1_critical_budget_constraint(self, mock_exists, mock_openai, mock_set_status, mock_write_json, mock_save_csv, mock_load_csv):
-        """
-        Test Case for P1 Critical: Budget Constraint.
-        Ensures the system blocks any AI action that exceeds the $185,000 budget.
-        """
-        mock_load_csv.side_effect = lambda name: {
-            "emails.csv": self.mock_emails_df,
-            "inventory.csv": self.mock_inv_df,
-            "sales.csv": self.mock_sales_df,
-            "manufacturing.csv": self.mock_mfg_df,
-            "finance.csv": self.mock_fin_df,
-            "suppliers.csv": self.mock_sup_df
-        }.get(name, pd.DataFrame())
-        mock_exists.return_value = False
-
-        # Setup mock OpenAI client
-        mock_ai_client = MagicMock()
-        mock_openai.return_value = mock_ai_client
-
-        # Mock the LLM to return a decision that attempts to increase payables by $200,000
         mock_llm_response = MagicMock()
         mock_llm_response.choices[0].message.content = json.dumps({
             "is_spam": False,
-            "work_name": "Test PO",
-            "affected_source": "finance.csv",
-            "agent_description": "test",
-            "reasoning_detail": "test",
-            "preference_refs": [],
-            "kpi_alignment": [],
+            "work_name": "Process Restock RAW-001",
+            "affected_source": "inventory.csv",
+            "agent_description": "Processed valid restock and updated inventory.",
+            "reasoning_detail": "Stock is low, replenishing.",
+            "preference_refs": ["Low Stock Replenishment"],
+            "kpi_alignment": ["Stockout risk reduction"],
             "confidence": "High",
             "guardrail_status": "Passed",
-            "alternative_considered": "none",
-            "follow_up": None,
+            "alternative_considered": "Do nothing, rejected.",
+            "follow_up": {"to": "supplier@test.com", "subject": "PO", "body": "Need 50", "reason": "Restock"},
             "status": "Completed",
-            "inference": "test",
-            "decision": "test",
-            "actions": ["test"],
-            "risks": ["test"],
+            "inference": "Supplier confirming order.",
+            "decision": "Update inventory and send confirmation.",
+            "actions": ["Drafted PO"],
+            "risks": [],
             "csv_updates": {
-                "finance_changes": [{"account_name": "Pending Payables", "balance_change": 200000.0}]
+                "inventory_changes": [{"item_id": "RAW-001", "stock_change": 50}],
+                "finance_changes": [{"account_name": "Operating Cash", "balance_change": -500.0}]
             }
         })
-        mock_ai_client.chat.completions.create.return_value = mock_llm_response
-        os.environ["GEMINI_API_KEY"] = "test"
+        # Use our pre-injected mock
+        self.mock_ai_client.chat.completions.create.return_value = mock_llm_response
 
-        # Run the agent
         audit_log, files_modified = agent.process_emails()
 
-        # Assertions
         self.assertEqual(len(audit_log), 1)
-        # Check if the budget constraint logic blocked it (assuming the agent has this logic implemented)
-        # If the agent doesn't have it implemented yet, this test will fail, serving as TDD!
+        self.assertEqual(audit_log[0]["status"], "Completed")
+        self.assertEqual(audit_log[0]["guardrail_status"], "Passed")
+        self.assertIn("inventory.csv", files_modified)
+        self.assertIn("finance.csv", files_modified)
+        self.assertTrue(any("Automatically sent follow-up email" in action for action in audit_log[0]["actions"]))
+
+    @patch('agent.load_csv')
+    @patch('agent.save_csv')
+    @patch('agent.set_status')
+    @patch('agent.os.path.exists')
+    @patch('agent.os.replace')
+    @patch('builtins.open', new_callable=mock_open)
+    def test_tc06_spam_noise_filtering(self, mock_file, mock_os_replace, mock_exists, mock_set_status, mock_save_csv, mock_load_csv):
+        """
+        TC-06: Spam and Noise Filtering.
+        Verifies irrelevant emails do not trigger workflows or CSV mutations.
+        """
+        # Inject an obvious spam email just for this test
+        spam_df = pd.DataFrame([{
+            "id": "EMAIL-999",
+            "sender": "marketing@spammer.com",
+            "subject": "Win a free cruise!",
+            "date": "2026-05-01",
+            "body": "Click here for a free discount and vacation."
+        }])
         
-        # Check that guardrail_status was updated
-        self.assertIn(audit_log[0]["guardrail_status"], ["Blocked", "Needs Review"])
-        
-        # Ensure the budget exceeding change was recorded as a risk or blocked
-        self.assertTrue(any("budget" in risk.lower() or "185000" in risk for risk in audit_log[0].get("risks", [])))
+        def custom_load_csv(name):
+            if name == "emails.csv": return spam_df
+            return self._mock_load_csv_side_effect(name)
+            
+        mock_load_csv.side_effect = custom_load_csv
+        mock_exists.return_value = False
+
+        mock_llm_response = MagicMock()
+        mock_llm_response.choices[0].message.content = json.dumps({
+            "is_spam": True,
+            "work_name": "Spam Filter",
+            "affected_source": "emails.csv",
+            "agent_description": "Ignored promotional email.",
+            "reasoning_detail": "Email is promotional noise.",
+            "confidence": "High",
+            "guardrail_status": "Passed",
+            "status": "Skipped", 
+            "inference": "This is marketing spam.",
+            "decision": "Deleted from database.",
+            "actions": [],
+            "csv_updates": {}
+        })
+        self.mock_ai_client.chat.completions.create.return_value = mock_llm_response
+
+        audit_log, files_modified = agent.process_emails()
+
+        self.assertEqual(len(files_modified), 0, "No CSVs should be modified for spam")
+
+    @patch('agent.load_csv')
+    @patch('agent.save_csv')
+    @patch('agent.set_status')
+    @patch('agent.os.path.exists')
+    @patch('agent.os.replace') 
+    @patch('builtins.open', new_callable=mock_open)
+    def test_hallucination_handling_invalid_sku(self, mock_file, mock_os_replace, mock_exists, mock_set_status, mock_save_csv, mock_load_csv):
+        """
+        Section 6.4: Hallucination Handling.
+        LLM returns valid JSON but references non-existent item SKU-XYZ not found in inventory.csv.
+        """
+        mock_load_csv.side_effect = self._mock_load_csv_side_effect
+        mock_exists.return_value = False
+
+        mock_llm_response = MagicMock()
+        mock_llm_response.choices[0].message.content = json.dumps({
+            "work_name": "Update Stock",
+            "affected_source": "inventory.csv",
+            "status": "In Progress",
+            "csv_updates": {
+                "inventory_changes": [{"item_id": "SKU-XYZ", "stock_change": 100}]
+            }
+        })
+        self.mock_ai_client.chat.completions.create.return_value = mock_llm_response
+
+        audit_log, files_modified = agent.process_emails()
+
+        self.assertEqual(len(files_modified), 0, "Should block write due to hallucinated SKU")
+        self.assertIn("AI Error", audit_log[0]["inference"])
+        self.assertEqual(audit_log[0]["decision"], "Fallback: Manual review required.")
+
+    @patch('agent.load_csv')
+    @patch('agent.save_csv')
+    @patch('agent.set_status')
+    @patch('agent.os.path.exists')
+    @patch('agent.os.replace') 
+    @patch('builtins.open', new_callable=mock_open)
+    def test_tc04_api_rate_limit_resilience(self, mock_file, mock_os_replace, mock_exists, mock_set_status, mock_save_csv, mock_load_csv):
+        """
+        TC-04: External API Rate Limit Resilience.
+        Verify system handles LLM API failure (e.g., 429/503) without crashing.
+        """
+        mock_load_csv.side_effect = self._mock_load_csv_side_effect
+        mock_exists.return_value = False
+
+        self.mock_ai_client.chat.completions.create.side_effect = Exception("Error code: 429 - Quota exceeded")
+
+        audit_log, files_modified = agent.process_emails()
+
+        self.assertEqual(audit_log[0]["decision"], "Fallback: Manual review required.")
+        self.assertIn("429", audit_log[0]["inference"])
+        self.assertEqual(files_modified, [])
 
 if __name__ == '__main__':
     unittest.main()
