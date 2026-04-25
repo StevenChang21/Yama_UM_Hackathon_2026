@@ -1,0 +1,7 @@
+supplier_id,supplier_name,item_id,item_name,unit_cost,delivery_days,payment_terms
+SUP-001,Alpha Metals,RAW-001,Drill Head,12.50,7,Net30
+SUP-002,MotorTech,RAW-002,Motor,28.00,14,Net45
+SUP-003,CasingWorks,RAW-003,Casing,8.20,5,Net30
+SUP-004,ElectroCore,RAW-004,Electronics Board,18.70,12,Net60
+SUP-005,WireLink,RAW-005,Wiring,4.10,6,Net30
+SUP-006,Backup Motors,RAW-002,Motor,30.20,9,Net30

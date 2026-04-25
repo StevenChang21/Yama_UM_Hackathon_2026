@@ -44,6 +44,7 @@ def process_emails():
     sales_df = load_csv("sales.csv")
     mfg_df = load_csv("manufacturing.csv")
     fin_df = load_csv("finance.csv")
+    sup_df = load_csv("suppliers.csv")
 
     audit_log = []
     if os.path.exists(AUDIT_LOG_PATH):
@@ -164,6 +165,11 @@ def process_emails():
                 mfg_lines.append(f"- {r['work_order_id']}: {r['item_id']}, status: {r['status']}, {r['qty']} pending units")
         
         cash = get_current_balance(fin_df, "Operating Cash")
+        payables = get_current_balance(fin_df, "Pending Payables")
+        
+        sup_lines = []
+        for _, sup in sup_df.iterrows():
+            sup_lines.append(f"- {sup['supplier_id']} ({sup['supplier_name']}): {sup['item_name']} ({sup['item_id']}), Cost: ${sup['unit_cost']:.2f}, Delivery: {sup['delivery_days']} days, Terms: {sup['payment_terms']}")
 
         prompt = f"""You are an autonomous supply chain AI agent for YamaTech.
 
@@ -177,6 +183,9 @@ CURRENT STATE:
 Raw Material Inventory:
 {chr(10).join(inv_context)}
 
+Approved Suppliers & Pricing:
+{chr(10).join(sup_lines)}
+
 Bill of Materials (BOM):
 {chr(10).join(bom_lines)}
 
@@ -187,6 +196,7 @@ Manufacturing Work Orders:
 {chr(10).join(mfg_lines)}
 
 Operating Cash: ${cash:.2f}
+Pending Payables: ${payables:.2f}
 
 PREFERENCE RULES (in priority order configured by user):
 {dynamic_prefs_str}
@@ -217,9 +227,13 @@ Analyze this email and decide the best action. Return ONLY a JSON object with th
   "risks": ["List of risks detected"],
   "csv_updates": {{
     "inventory_changes": [ {{"item_id": "...", "stock_change": 0}} ],
-    "finance_changes": [ {{"account_name": "Operating Cash", "balance_change": 0}} ]
+    "finance_changes": [ {{"account_name": "Operating Cash" or "Pending Payables", "balance_change": 0}} ]
   }}
 }}
+
+CRITICAL ACCOUNTING RULES:
+1. If you place an order with a supplier, you MUST use the exact unit cost from the 'Approved Suppliers & Pricing' list.
+2. If the supplier's payment_terms are 'Net30', 'Net45', or 'Net60', you MUST increase 'Pending Payables' instead of immediately deducting from 'Operating Cash'. Only deduct from 'Operating Cash' if terms require immediate payment.
 
 If you need to send a follow-up email because information is missing, set follow_up to:
 {{"to": "recipient@email.com", "subject": "...", "body": "...", "reason": "Why follow-up is needed"}}
