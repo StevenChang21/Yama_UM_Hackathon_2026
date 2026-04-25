@@ -1,4 +1,6 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
+
+const API = "http://localhost:8000";
 import {
   Settings2,
   GripVertical,
@@ -187,11 +189,50 @@ const Preferences = () => {
   });
   const toggleAllocRule = (k) => setAllocRules((s) => ({ ...s, [k]: !s[k] }));
 
-  /* ── Saved state animation ── */
+  /* ── Fetch Preferences on Load ── */
+  useEffect(() => {
+    fetch(`${API}/api/preferences`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.rules) setRules(data.rules);
+        if (data.budget) setBudget(data.budget);
+        if (data.approvalThreshold) setApprovalThreshold(data.approvalThreshold);
+        if (data.reorderQty) setReorderQty(data.reorderQty);
+        if (data.supplierWeights) setSupplierWeights(data.supplierWeights);
+        if (data.kpis) setKpis(data.kpis);
+        if (data.allocRules) setAllocRules(data.allocRules);
+      })
+      .catch(err => console.error("Failed to fetch preferences:", err));
+  }, []);
+
+  /* ── Save State to Backend ── */
   const [saved, setSaved] = useState(false);
-  const handleSave = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2200);
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async () => {
+    setSaving(true);
+    const payload = {
+      rules,
+      budget,
+      approvalThreshold,
+      reorderQty,
+      supplierWeights,
+      kpis,
+      allocRules
+    };
+    try {
+      await fetch(`${API}/api/preferences`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2200);
+    } catch (err) {
+      console.error("Failed to save preferences:", err);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -214,8 +255,8 @@ const Preferences = () => {
           <button className="btn btn-outline pref-reset-btn" onClick={() => window.location.reload()}>
             <RotateCcw size={16} /> Reset All
           </button>
-          <button className={`btn btn-primary pref-save-btn ${saved ? "saved" : ""}`} onClick={handleSave}>
-            {saved ? <><CheckCircle2 size={16} /> Saved</> : <><Save size={16} /> Save Preferences</>}
+          <button className={`btn btn-primary pref-save-btn ${saved ? "saved" : ""}`} onClick={handleSave} disabled={saving}>
+            {saving ? "Saving..." : saved ? <><CheckCircle2 size={16} /> Saved</> : <><Save size={16} /> Save Preferences</>}
           </button>
         </div>
       </header>
