@@ -141,6 +141,19 @@ def fetch_unread_emails() -> list[dict]:
             date_str = msg.get("Date", "")
             body = _extract_body(msg)
 
+            # Skip bounce/delivery-failure notifications — they are not operational emails
+            _sender_lower = sender.lower()
+            _subject_lower = subject.lower()
+            _is_bounce = any(x in _sender_lower for x in ["mailer-daemon", "postmaster"]) or \
+                         any(x in _subject_lower for x in [
+                             "delivery status notification", "mail delivery",
+                             "undeliverable", "returned mail", "delivery failure"
+                         ])
+            if _is_bounce:
+                mail.store(eid, '+FLAGS', '\\Seen')
+                print(f"[EmailReader] Skipped bounce notification: '{subject}'")
+                continue
+
             email_dict = {
                 "subject": subject,
                 "sender": sender,
