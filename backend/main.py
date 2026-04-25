@@ -1,5 +1,8 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
+from contextlib import asynccontextmanager
+import pandas as pd
 import pandas as pd
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
@@ -10,8 +13,23 @@ import os
 from orchestrator import process_orchestration
 
 load_dotenv()
+from email_reader import (
+    email_poll_loop,
+    process_emails,
+    get_all_alerts,
+    clear_alerts,
+)
 
-app = FastAPI(title="AI Inventory Replenishment API")
+# Start the email poll loop as a background task when the app starts
+@asynccontextmanager
+async def lifespan(app):
+    # Startup: launch email polling background task
+    task = asyncio.create_task(email_poll_loop())
+    yield
+    # Shutdown: cancel the background task
+    task.cancel()
+
+app = FastAPI(title="AI Inventory Replenishment API", lifespan=lifespan)
 
 # Setup CORS for the frontend
 app.add_middleware(
