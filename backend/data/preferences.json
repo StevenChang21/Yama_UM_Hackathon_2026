@@ -7,7 +7,7 @@
     },
     {
       "id": "urgent-demand",
-      "label": "Urgent Customer Demand",
+      "label": "Urgent Customer Demandddd",
       "color": "#e20015"
     },
     {
@@ -53,5 +53,6 @@
     "protectFulfilment": true,
     "avoidDelays": true,
     "autoWorkOrders": false
-  }
+  },
+  "customRules": ""
 }

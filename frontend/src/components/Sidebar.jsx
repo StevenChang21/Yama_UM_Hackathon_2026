@@ -2,11 +2,7 @@ import React from "react";
 import { NavLink } from "react-router-dom";
 import {
   LayoutDashboard,
-  PackageSearch,
-  FileEdit,
-  Lightbulb,
   History,
-  Truck,
   Activity,
   Settings2,
 } from "lucide-react";
@@ -23,19 +19,7 @@ const Sidebar = () => {
       path: "/control-centre",
       icon: <Activity size={20} />,
     },
-    {
-      name: "Inventory",
-      path: "/inventory",
-      icon: <PackageSearch size={20} />,
-    },
-    { name: "Planning Inputs", path: "/inputs", icon: <FileEdit size={20} /> },
-    {
-      name: "Recommendations",
-      path: "/recommendations",
-      icon: <Lightbulb size={20} />,
-    },
     { name: "History", path: "/history", icon: <History size={20} /> },
-    { name: "Suppliers", path: "/suppliers", icon: <Truck size={20} /> },
     { name: "Preferences", path: "/preferences", icon: <Settings2 size={20} /> },
   ];
 

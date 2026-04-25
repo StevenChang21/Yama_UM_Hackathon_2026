@@ -5,46 +5,22 @@
     "sender": "procurement@autopartscorp.com",
     "subject": "Purchase Order ORD-101 & ORD-102 Confirmation",
     "intent": "analysis",
-    "work_name": "Clarify ORD-101 and ORD-102 Quantity Discrepancy with AutoParts Corp",
-    "affected_source": "sales.csv",
-    "agent_description": "Identified critical quantity discrepancies between customer email confirmation and existing sales orders. ORD-101: customer confirms 300 units of SKU-A but system shows 500 units. ORD-102: customer confirms 200 units of SKU-B but system shows 100 units. Drafted follow-up email to procurement@autopartscorp.com requesting clarification before making any data changes. No CSV updates made pending confirmation.",
-    "reasoning_detail": "The email from AutoParts Corp references ORD-101 and ORD-102 with quantities that do NOT match our current sales records. ORD-101 shows 300 units (customer) vs 500 units (system) - a 200 unit difference. ORD-102 shows 200 units (customer) vs 100 units (system) - a 100 unit difference. Making assumptions about which quantities are correct could lead to: (1) Over-production and excess inventory if customer quantities are correct, (2) Under-delivery and stockout if system quantities are correct. Budget Constraints rule (Priority 1) requires careful verification before committing production resources. Fulfilment KPI is at risk if we produce wrong quantities. No changes should be made until discrepancy is resolved.",
-    "preference_refs": [
-      "Budget Constraints",
-      "Urgent Customer Demand",
-      "Low Stock Replenishment"
-    ],
-    "kpi_alignment": [
-      "Fulfilment rate protection",
-      "Stockout risk reduction",
-      "LeadTime protection"
-    ],
-    "confidence": "High",
-    "guardrail_status": "Passed",
-    "alternative_considered": "Considered updating ORD-101 to 300 units and ORD-102 to 200 units based on customer email, but rejected because: (1) the customer may have partial orders or amendments not reflected, (2) changing quantities without confirmation could breach existing commitments, (3) production planning (WO-001 already in progress for 80 units of SKU-A) was based on original 500-unit order.",
-    "follow_up": {
-      "to": "procurement@autopartscorp.com",
-      "subject": "RE: Purchase Order ORD-101 & ORD-102 - Quantity Clarification Required",
-      "body": "Dear AutoParts Corp Procurement Team, thank you for your email confirming Q2 purchase orders. We have received your confirmation for ORD-101 (300 units SKU-A) and ORD-102 (200 units SKU-B), however our records show different quantities: ORD-101 reflects 500 units of SKU-A and ORD-102 reflects 100 units of SKU-B in our system. Could you please confirm the correct quantities for each order? This will ensure we align our production schedule accurately to meet your May 5th deadline. Best regards, YamaTech Supply Chain Team",
-      "reason": "Critical quantity discrepancy between customer confirmation and system records must be resolved before any production or inventory adjustments can be made"
-    },
-    "status": "Completed",
-    "inference": "Customer AutoParts Corp is confirming purchase orders for Q2 delivery, but the quantities they reference (300 units SKU-A, 200 units SKU-B) don't match our sales order records (500 units SKU-A, 100 units SKU-B), indicating either a data entry error, partial order amendment, or miscommunication",
-    "decision": "Hold all changes to sales orders ORD-101 and ORD-102 pending customer clarification on correct quantities, to avoid incorrect production planning and potential budget waste",
-    "actions": [
-      "Compared email quantities against system sales order records",
-      "Identified discrepancy: ORD-101 (300 vs 500 units), ORD-102 (200 vs 100 units)",
-      "Drafted clarification email to procurement@autopartscorp.com",
-      "Flagged guardrail status as Needs Review due to data inconsistency",
-      "Automatically sent follow-up email to procurement@autopartscorp.com"
-    ],
+    "work_name": "Purchase Order ORD-101 & ORD-102 Confirmation",
+    "affected_source": "emails.csv",
+    "agent_description": "",
+    "reasoning_detail": "",
+    "preference_refs": [],
+    "kpi_alignment": [],
+    "confidence": "Medium",
+    "guardrail_status": "Needs Review",
+    "alternative_considered": "",
+    "follow_up": null,
+    "status": "In Progress",
+    "inference": "AI Error: Error code: 504 - {'type': 'https://developers.cloudflare.com/support/troubleshooting/http-status-codes/cloudflare-5xx-errors/error-504/', 'title': 'Error 504: Gateway time-out', 'status': 504, 'detail': 'The origin web server did not respond to Cloudflare within the allowed time. This typically means the origin is overloaded or a backend process is taking too long.', 'instance': '9f1ca71929529a8c', 'error_code': 504, 'error_name': 'origin_gateway_timeout', 'error_category': 'origin_error', 'ray_id': '9f1ca71929529a8c', 'timestamp': '2026-04-25T10:28:00Z', 'zone': 'api.ilmu.ai', 'cloudflare_error': True, 'retryable': True, 'retry_after': 120, 'owner_action_required': True, 'what_you_should_do': '**Wait and retry.** Back off for at least 120 seconds. If the error persists, the website operator should investigate long-running processes on the origin server.', 'footer': 'This error was generated by Cloudflare on behalf of the website owner.'}",
+    "decision": "Fallback: Manual review required.",
+    "actions": [],
     "files_updated": [],
-    "risks": [
-      "Quantity mismatch may delay production scheduling for May 5th deadline",
-      "If customer quantities are correct, current WO-001 (80 pending SKU-A units) may be over-producing",
-      "If system quantities are correct, customer may be expecting smaller deliveries leading to surplus inventory",
-      "RAW-004 is below reorder point (150 vs 400 needed) which could block SKU-A production regardless of order quantity"
-    ]
+    "risks": []
   },
   {
     "email_id": "MSG-002",
@@ -52,50 +28,22 @@
     "sender": "orders@nexgenrobotics.io",
     "subject": "New Order - SKU-C and SKU-D for Pilot Deployment",
     "intent": "analysis",
-    "work_name": "Create Sales Order ORD-106 for NexGen Robotics - 150 SKU-C and 100 SKU-D",
-    "affected_source": "sales.csv",
-    "agent_description": "Created new sales order ORD-106 for NexGen Robotics requesting 150 units of SKU-C and 100 units of SKU-D due 2026-05-10. Conducted BOM feasibility analysis revealing critical raw material shortages: RAW-003 deficit of 1050+ units (current 600 vs total need 1650 across all orders), RAW-004 deficit of 790 units, RAW-002 deficit projected at 80+ units. Drafted follow-up email to customer acknowledging order while flagging potential timeline constraints due to material procurement lead times.",
-    "reasoning_detail": "Analyzed BOM requirements for new order: 150 SKU-C needs 150 RAW-001, 450 RAW-003, 150 RAW-005; 100 SKU-D needs 100 RAW-002, 200 RAW-003. Combined with existing orders (ORD-101 through ORD-105), total RAW-003 requirement is 1650 units vs 600 on hand - critical shortage. RAW-004 at 150 units vs 940 needed for SKU-A alone. Existing work orders WO-002 (SKU-C) already halted due to RAW-003 exhaustion, WO-003 (SKU-B) blocked awaiting RAW-001. Budget Constraints rule (priority 1) requires verifying procurement costs within $52,800 operating cash before committing. Urgent Customer Demand rule (priority 2) triggered - this is a strategic new customer with investor presentation. Low Stock Replenishment (priority 3) - multiple raw materials below/at reorder points. Production Blockage (priority 5) - existing WOs already blocked. KPIs at risk: stockout imminent for RAW-003/RAW-004, fulfilment rate threatened across multiple orders, leadTime delays likely without expedited procurement.",
-    "preference_refs": [
-      "Budget Constraints",
-      "Urgent Customer Demand",
-      "Low Stock Replenishment",
-      "Production Blockage"
-    ],
-    "kpi_alignment": [
-      "Fulfilment rate protection",
-      "Stockout risk reduction",
-      "Lead time management"
-    ],
+    "work_name": "New Order - SKU-C and SKU-D for Pilot Deployment",
+    "affected_source": "emails.csv",
+    "agent_description": "",
+    "reasoning_detail": "",
+    "preference_refs": [],
+    "kpi_alignment": [],
     "confidence": "Medium",
-    "guardrail_status": "Passed",
-    "alternative_considered": "Considered rejecting the order due to severe RAW-003 and RAW-004 shortages that make May 10th delivery risky. Rejected this option because: (1) this is a strategic new customer relationship, (2) partial fulfilment may be possible if materials are expedited, (3) rejecting would guarantee lost revenue and damage relationship before it starts. Better to accept with managed expectations and pursue aggressive procurement.",
-    "follow_up": {
-      "to": "orders@nexgenrobotics.io",
-      "subject": "Re: New Order - SKU-C and SKU-D for Pilot Deployment - Order Confirmation & Timeline Update",
-      "body": "Dear NexGen Robotics team, thank you for choosing YamaTech for your pilot deployment. We have created order ORD-106 for 150 units of SKU-C and 100 units of SKU-D with a target delivery of May 10th. Due to unprecedented demand across our production lines, we are currently expediting procurement of key raw materials. We are prioritizing your order given its strategic importance and your investor presentation timeline. We will provide a confirmed delivery schedule within 48 hours once our supply chain team finalizes expedited material arrivals. We are committed to supporting your pilot deployment successfully.",
-      "reason": "Customer requested feasibility confirmation; raw material shortages create delivery risk that must be communicated while demonstrating commitment to fulfilment"
-    },
-    "status": "Completed",
-    "inference": "New customer NexGen Robotics is placing first large order (150 SKU-C, 100 SKU-D) for pilot deployment across 3 factory sites with investor presentation in mid-May. Delivery quality and timeliness are critical for their business success.",
-    "decision": "Accept sales order ORD-106, initiate follow-up communication to manage delivery expectations, and flag urgent need for raw material procurement to unblock production",
-    "actions": [
-      "Created sales order ORD-106: 150 units SKU-C + 100 units SKU-D, due 2026-05-10, customer NexGen Robotics",
-      "Completed BOM feasibility analysis identifying RAW-003 as critical bottleneck (need 1650 total, have 600)",
-      "Identified RAW-004 shortage (need 940 for SKU-A alone, have 150) affecting existing ORD-101",
-      "Drafted follow-up email to NexGen Robotics acknowledging order with timeline caveat",
-      "Flagged urgent procurement need for RAW-003, RAW-004, RAW-002 to supply chain",
-      "Automatically sent follow-up email to orders@nexgenrobotics.io"
-    ],
+    "guardrail_status": "Needs Review",
+    "alternative_considered": "",
+    "follow_up": null,
+    "status": "In Progress",
+    "inference": "AI Error: Error code: 504 - {'type': 'https://developers.cloudflare.com/support/troubleshooting/http-status-codes/cloudflare-5xx-errors/error-504/', 'title': 'Error 504: Gateway time-out', 'status': 504, 'detail': 'The origin web server did not respond to Cloudflare within the allowed time. This typically means the origin is overloaded or a backend process is taking too long.', 'instance': '9f1cabc78a6a9a8c', 'error_code': 504, 'error_name': 'origin_gateway_timeout', 'error_category': 'origin_error', 'ray_id': '9f1cabc78a6a9a8c', 'timestamp': '2026-04-25T10:31:12Z', 'zone': 'api.ilmu.ai', 'cloudflare_error': True, 'retryable': True, 'retry_after': 120, 'owner_action_required': True, 'what_you_should_do': '**Wait and retry.** Back off for at least 120 seconds. If the error persists, the website operator should investigate long-running processes on the origin server.', 'footer': 'This error was generated by Cloudflare on behalf of the website owner.'}",
+    "decision": "Fallback: Manual review required.",
+    "actions": [],
     "files_updated": [],
-    "risks": [
-      "RAW-003 critical shortage: 1050+ unit deficit across all orders, existing WO-002 already halted",
-      "RAW-004 severe shortage: 790 unit deficit blocking SKU-A production for ORD-101",
-      "RAW-002 projected shortage after fulfilling existing orders plus new SKU-D requirement",
-      "New customer relationship at risk if May 10th deadline missed - investor presentation dependency",
-      "Cascading delays: blocked work orders may delay existing customer orders (ORD-101 through ORD-105)",
-      "Budget uncertainty: raw material unit costs showing $0 - cannot verify procurement fits $52,800 cash"
-    ]
+    "risks": []
   },
   {
     "email_id": "MSG-003",
@@ -103,53 +51,7 @@
     "sender": "alerts@fastcompmetals.com",
     "subject": "SUPPLY ALERT: Global Copper Winding Coil Shortage - Price Revision",
     "intent": "analysis",
-    "work_name": "Place Emergency PO for 600 units RAW-003 at current pricing",
-    "affected_source": "suppliers.csv",
-    "agent_description": "Created emergency purchase order for 600 units of RAW-003 (Copper Winding Coil) from FastComp Metals at $8.75/unit to lock in current pricing before April 28th deadline and secure supply for blocked production orders WO-002 and WO-004. Total cost: $5,250. Updated suppliers.csv with new PO and finance.csv with cash allocation.",
-    "reasoning_detail": "RAW-003 is a critical production bottleneck. WO-002 (SKU-C, 50 pending) is halted due to RAW-003 exhaustion and WO-004 (SKU-D) cannot start. Current RAW-003 inventory of 600 units is insufficient for pending sales orders requiring 1,150 units total (ORD-103: 100 SKU-D = 200 RAW-003, ORD-104: 250 SKU-C = 750 RAW-003, ORD-105: 100 SKU-D = 200 RAW-003). The supplier alert confirms impending 15-25% price increase ($10.06-$10.94/unit) effective May 1st with only ~600 units globally available. Ordering 600 units now at $8.75 saves $786-$1,314 vs post-May 1st pricing. Budget impact of $5,250 is Low (<$6,500 threshold), leaving $47,550 operating cash. This directly addresses Production Blockage (WO-002 halted, WO-004 blocked), Urgent Customer Demand (ORD-103 due 2026-05-05, ORD-104/105 due 2026-05-10), and Supplier Delay risk. Even with 600 additional units, post-production buffer will be only 50 units vs 500 reorder point, so this is a minimum necessary order.",
-    "preference_refs": [
-      "Budget Constraints",
-      "Urgent Customer Demand",
-      "Low Stock Replenishment",
-      "Supplier Delay",
-      "Production Blockage"
-    ],
-    "kpi_alignment": [
-      "Fulfilment rate protection",
-      "Stockout risk reduction",
-      "Lead time minimization"
-    ],
-    "confidence": "High",
-    "guardrail_status": "Passed",
-    "alternative_considered": "Considered ordering only 550 units (minimum shortfall for current orders). Rejected because: 1) Leaves zero buffer above production requirements, 2) Supplier has 600 units available and first-come-first-served allocation means we should secure maximum available, 3) Marginal cost of 50 additional units ($437.50) is justified for buffer stock. Also considered waiting to negotiate price, but rejected due to time sensitivity (April 28th deadline) and supply scarcity risk.",
-    "follow_up": null,
-    "status": "Completed",
-    "inference": "FastComp Metals is warning of a global RAW-003 (Copper Winding Coil) shortage due to port disruptions and mine closure. They have approximately 600 units available at current price of $8.75/unit, with 15-25% price increase effective May 1st. Orders must be placed before April 28th to lock in pricing and secure allocation on first-come-first-served basis.",
-    "decision": "Place emergency purchase order for maximum available 600 units of RAW-003 at $8.75/unit to secure supply, lock in current pricing before increase, and unblock halted production work orders",
-    "actions": [
-      "Created PO for 600 units RAW-003 at $8.75/unit from FastComp Metals",
-      "Allocated $5,250 from operating cash for RAW-003 purchase",
-      "Prioritized order placement before April 28th deadline to lock in pricing",
-      "Secured supply to unblock WO-002 (SKU-C) and enable WO-004 (SKU-D) startup"
-    ],
-    "files_updated": [
-      "inventory.csv",
-      "finance.csv"
-    ],
-    "risks": [
-      "Supplier may not fulfill full 600 units due to first-come-first-served allocation with other customers",
-      "Post-production RAW-003 buffer will be only 50 units, well below 500-unit reorder point, requiring additional sourcing",
-      "Future RAW-003 orders will face 15-25% price increase after May 1st",
-      "Supply disruption may extend beyond current horizon if port issues and mine closure persist"
-    ]
-  },
-  {
-    "email_id": "MSG-004",
-    "date": "2026-04-25 17:03",
-    "sender": "procurement@autopartscorp.com",
-    "subject": "Order Revision Request - ORD-101 SKU-A Quantity Increase",
-    "intent": "analysis",
-    "work_name": "Order Revision Request - ORD-101 SKU-A Quantity Increase",
+    "work_name": "SUPPLY ALERT: Global Copper Winding Coil Shortage - Price Revision",
     "affected_source": "emails.csv",
     "agent_description": "",
     "reasoning_detail": "",
@@ -160,305 +62,10 @@
     "alternative_considered": "",
     "follow_up": null,
     "status": "In Progress",
-    "inference": "AI Error: Error code: 504 - {'type': 'https://developers.cloudflare.com/support/troubleshooting/http-status-codes/cloudflare-5xx-errors/error-504/', 'title': 'Error 504: Gateway time-out', 'status': 504, 'detail': 'The origin web server did not respond to Cloudflare within the allowed time. This typically means the origin is overloaded or a backend process is taking too long.', 'instance': '9f1c3f08fa2f13e1', 'error_code': 504, 'error_name': 'origin_gateway_timeout', 'error_category': 'origin_error', 'ray_id': '9f1c3f08fa2f13e1', 'timestamp': '2026-04-25T09:16:58Z', 'zone': 'api.ilmu.ai', 'cloudflare_error': True, 'retryable': True, 'retry_after': 120, 'owner_action_required': True, 'what_you_should_do': '**Wait and retry.** Back off for at least 120 seconds. If the error persists, the website operator should investigate long-running processes on the origin server.', 'footer': 'This error was generated by Cloudflare on behalf of the website owner.'}",
-    "decision": "Fallback: Manual review required.",
-    "actions": [],
-    "files_updated": [],
-    "risks": []
-  },
-  {
-    "email_id": "MSG-005",
-    "date": "2026-04-25 17:04",
-    "sender": "inventory@yamatech.com",
-    "subject": "RFQ - Microcontroller V2 (RAW-001) Urgent Restock",
-    "intent": "analysis",
-    "work_name": "RFQ - Microcontroller V2 (RAW-001) Urgent Restock",
-    "affected_source": "emails.csv",
-    "agent_description": "",
-    "reasoning_detail": "",
-    "preference_refs": [],
-    "kpi_alignment": [],
-    "confidence": "Medium",
-    "guardrail_status": "Needs Review",
-    "alternative_considered": "",
-    "follow_up": null,
-    "status": "In Progress",
-    "inference": "AI Error: Error code: 504 - {'type': 'https://developers.cloudflare.com/support/troubleshooting/http-status-codes/cloudflare-5xx-errors/error-504/', 'title': 'Error 504: Gateway time-out', 'status': 504, 'detail': 'The origin web server did not respond to Cloudflare within the allowed time. This typically means the origin is overloaded or a backend process is taking too long.', 'instance': '9f1c43b66e0fd974', 'error_code': 504, 'error_name': 'origin_gateway_timeout', 'error_category': 'origin_error', 'ray_id': '9f1c43b66e0fd974', 'timestamp': '2026-04-25T09:20:09Z', 'zone': 'api.ilmu.ai', 'cloudflare_error': True, 'retryable': True, 'retry_after': 120, 'owner_action_required': True, 'what_you_should_do': '**Wait and retry.** Back off for at least 120 seconds. If the error persists, the website operator should investigate long-running processes on the origin server.', 'footer': 'This error was generated by Cloudflare on behalf of the website owner.'}",
-    "decision": "Fallback: Manual review required.",
-    "actions": [],
-    "files_updated": [],
-    "risks": []
-  },
-  {
-    "email_id": "MSG-006",
-    "date": "2026-04-25 17:05",
-    "sender": "sales@globaltech-components.com",
-    "subject": "RE: RFQ - Microcontroller V2 (RAW-001)",
-    "intent": "analysis",
-    "work_name": "RE: RFQ - Microcontroller V2 (RAW-001)",
-    "affected_source": "emails.csv",
-    "agent_description": "",
-    "reasoning_detail": "",
-    "preference_refs": [],
-    "kpi_alignment": [],
-    "confidence": "Medium",
-    "guardrail_status": "Needs Review",
-    "alternative_considered": "",
-    "follow_up": null,
-    "status": "In Progress",
-    "inference": "AI Error: Error code: 504 - {'type': 'https://developers.cloudflare.com/support/troubleshooting/http-status-codes/cloudflare-5xx-errors/error-504/', 'title': 'Error 504: Gateway time-out', 'status': 504, 'detail': 'The origin web server did not respond to Cloudflare within the allowed time. This typically means the origin is overloaded or a backend process is taking too long.', 'instance': '9f1c4863ebc49ceb', 'error_code': 504, 'error_name': 'origin_gateway_timeout', 'error_category': 'origin_error', 'ray_id': '9f1c4863ebc49ceb', 'timestamp': '2026-04-25T09:23:21Z', 'zone': 'api.ilmu.ai', 'cloudflare_error': True, 'retryable': True, 'retry_after': 120, 'owner_action_required': True, 'what_you_should_do': '**Wait and retry.** Back off for at least 120 seconds. If the error persists, the website operator should investigate long-running processes on the origin server.', 'footer': 'This error was generated by Cloudflare on behalf of the website owner.'}",
-    "decision": "Fallback: Manual review required.",
-    "actions": [],
-    "files_updated": [],
-    "risks": []
-  },
-  {
-    "email_id": "MSG-007",
-    "date": "2026-04-25 17:06",
-    "sender": "orders@nexgenrobotics.io",
-    "subject": "Order Amendment - Increase SKU-C Quantity",
-    "intent": "analysis",
-    "work_name": "Order Amendment - Increase SKU-C Quantity",
-    "affected_source": "emails.csv",
-    "agent_description": "",
-    "reasoning_detail": "",
-    "preference_refs": [],
-    "kpi_alignment": [],
-    "confidence": "Medium",
-    "guardrail_status": "Needs Review",
-    "alternative_considered": "",
-    "follow_up": null,
-    "status": "In Progress",
-    "inference": "AI Error: Error code: 504 - {'type': 'https://developers.cloudflare.com/support/troubleshooting/http-status-codes/cloudflare-5xx-errors/error-504/', 'title': 'Error 504: Gateway time-out', 'status': 504, 'detail': 'The origin web server did not respond to Cloudflare within the allowed time. This typically means the origin is overloaded or a backend process is taking too long.', 'instance': '9f1c4d139bb43e8d', 'error_code': 504, 'error_name': 'origin_gateway_timeout', 'error_category': 'origin_error', 'ray_id': '9f1c4d139bb43e8d', 'timestamp': '2026-04-25T09:26:33Z', 'zone': 'api.ilmu.ai', 'cloudflare_error': True, 'retryable': True, 'retry_after': 120, 'owner_action_required': True, 'what_you_should_do': '**Wait and retry.** Back off for at least 120 seconds. If the error persists, the website operator should investigate long-running processes on the origin server.', 'footer': 'This error was generated by Cloudflare on behalf of the website owner.'}",
-    "decision": "Fallback: Manual review required.",
-    "actions": [],
-    "files_updated": [],
-    "risks": []
-  },
-  {
-    "email_id": "MSG-008",
-    "date": "2026-04-25 17:07",
-    "sender": "production@yamatech.com",
-    "subject": "URGENT: RAW-001 Stock Critical - Production at Risk",
-    "intent": "analysis",
-    "work_name": "Emergency Procurement RAW-001 and RAW-003",
-    "affected_source": "inventory.csv",
-    "agent_description": "Analyzed urgent production alert MSG-008 reporting critical stock discrepancies. Updated inventory records for RAW-001 from 1520 to 120 units and RAW-003 from 1200 to 280 units based on production floor report. Identified need for emergency purchase orders: RAW-001 requires minimum 1350 units (for 500 SKU-A + 100 SKU-B + 250 SKU-C), RAW-003 requires minimum 870 units (for 250 SKU-C + 200 SKU-D), and RAW-004 requires 850 units (below reorder point at 150, needed for 500 SKU-A). Requested supplier information to finalize PO placement within budget.",
-    "reasoning_detail": "Email reports actual stock levels significantly lower than system records: RAW-001 at 120 units (system shows 1520) and RAW-003 at 280 units (system shows 1200). WO-001 will deplete remaining RAW-001 by tomorrow. WO-002 halted, WO-003 blocked, WO-004 not started. BOM analysis shows total RAW-001 need of 1350 units across all pending orders, RAW-003 need of 1150 units. Budget Constraints (Rule 1): Operating cash $47,550 is in High range, sufficient for emergency procurement. Urgent Customer Demand (Rule 2): May 5th orders (ORD-101, ORD-102, ORD-103) and May 10th orders (ORD-104, ORD-105) at risk. Low Stock Replenishment (Rule 3): RAW-001, RAW-003, RAW-004 all below/at reorder points. Production Blockage (Rule 5): 3 of 4 work orders blocked. Cannot place POs without supplier pricing and lead time data.",
-    "preference_refs": [
-      "Budget Constraints",
-      "Urgent Customer Demand",
-      "Low Stock Replenishment",
-      "Production Blockage"
-    ],
-    "kpi_alignment": [
-      "Stockout risk reduction",
-      "Fulfilment rate protection",
-      "Lead time protection"
-    ],
-    "confidence": "Medium",
-    "guardrail_status": "Passed",
-    "alternative_considered": "Considered placing POs immediately using estimated pricing, but rejected because unit costs are $0 in system (missing data) and ordering without confirmed pricing risks budget overrun. Also considered deprioritizing May 10th orders to reduce immediate RAW-001 need, but rejected because all orders have active KPIs to protect and partial fulfilment damages customer relationships.",
-    "follow_up": {
-      "to": "procurement@yamatech.com",
-      "subject": "URGENT: Emergency PO Required - RAW-001, RAW-003, RAW-004",
-      "body": "Production has flagged critical stock shortages requiring immediate procurement action:\n\n1. RAW-001 (Microcontroller V2): Current stock ~120 units, need 1350+ units urgently. WO-001 will deplete stock by tomorrow. Blocks WO-003 and WO-002.\n\n2. RAW-003 (Copper Winding Coil): Current stock ~280 units, need 870+ units. WO-002 already halted.\n\n3. RAW-004: Current stock 150 units (below 400 reorder point), need 850+ units for SKU-A production.\n\nPlease provide: supplier contacts, unit pricing, lead times, and minimum order quantities for emergency orders. Budget available: $47,550. Deadline to confirm POs: end of this week to meet May 5th and May 10th customer delivery dates.",
-      "reason": "Cannot place purchase orders without supplier pricing, lead times, and contact information. System shows $0 unit costs indicating missing supplier data."
-    },
-    "status": "Completed",
-    "inference": "Production floor reports actual RAW-001 stock at 120 units (not 1520 in system) and RAW-003 at 280 units (not 1200), indicating system inventory is stale. WO-001 consuming last RAW-001, three other work orders blocked. Without emergency procurement by end of week, all May 5th and May 10th customer orders will be missed.",
-    "decision": "Update inventory records to reflect actual stock levels from production floor, initiate emergency procurement process for RAW-001 (1350+ units), RAW-003 (870+ units), and RAW-004 (850+ units), and request supplier information to finalize purchase orders within budget.",
-    "actions": [
-      "Updated RAW-001 inventory from 1520 to 120 units based on production floor report",
-      "Updated RAW-003 inventory from 1200 to 280 units based on production floor report",
-      "Calculated BOM requirements: RAW-001 needs 1350 units, RAW-003 needs 1150 units, RAW-004 needs 1000 units for all pending orders",
-      "Identified RAW-004 as additional critical shortage (150 units vs 1000 needed, below 400 reorder point)",
-      "Requested supplier information from procurement team for emergency PO placement",
-      "Automatically sent follow-up email to procurement@yamatech.com"
-    ],
-    "files_updated": [
-      "inventory.csv",
-      "inventory.csv"
-    ],
-    "risks": [
-      "System inventory data significantly stale - actual stock may differ further from records",
-      "Cannot confirm May 5th deadline achievement without supplier lead time information",
-      "Budget sufficiency unknown without unit pricing data",
-      "RAW-004 shortage not flagged in email but equally critical for SKU-A production",
-      "Multiple work orders blocked creating cascading delay risk across all customer orders"
-    ]
-  },
-  {
-    "email_id": "MSG-009",
-    "date": "2026-04-25 17:08",
-    "sender": "noreply@primematerials.com",
-    "subject": "RE: Tempered Glass Panel (RAW-004) - Out of Stock Notice",
-    "intent": "analysis",
-    "work_name": "Contact Alternative Supplier ClearTech for RAW-004 Supply",
-    "affected_source": "suppliers.csv",
-    "agent_description": "Analyzed supply disruption for RAW-004 from Prime Materials. Current RAW-004 stock is 150 units (below reorder point of 400), which is insufficient for WO-001 (needs 160 units for 80 SKU-A) and ORD-101 (500 SKU-A needs 1000 RAW-004 total). Adding ClearTech Glass Supply as alternative supplier in suppliers.csv and initiating contact to procure RAW-004. No inventory or finance changes made yet - awaiting quote from ClearTech.",
-    "reasoning_detail": "RAW-004 is critically low at 150 units vs reorder point of 400. Prime Materials cannot supply until late May, but ORD-101 (500 SKU-A, due 2026-05-05) requires 1000 units of RAW-004. Even WO-001 (80 pending SKU-A) needs 160 RAW-004, exceeding current stock. Budget constraint is $47,550 (Medium tier). Urgent Customer Demand rule triggers due to ORD-101 deadline. Supplier Delay rule triggers due to Prime Materials outage. Production Blockage rule triggers as WO-001 cannot complete. Contacting alternative supplier ClearTech (10-12 day lead time) is the only viable path - ordering today means delivery by ~May 5-7, slightly late for ORD-101 but best available option.",
-    "preference_refs": [
-      "Budget Constraints",
-      "Urgent Customer Demand",
-      "Low Stock Replenishment",
-      "Supplier Delay",
-      "Production Blockage"
-    ],
-    "kpi_alignment": [
-      "Fulfilment rate protection",
-      "Stockout risk reduction",
-      "Lead time mitigation"
-    ],
-    "confidence": "Medium",
-    "guardrail_status": "Passed",
-    "alternative_considered": "Considered waiting for Prime Materials to restore stock in late May, but rejected because this would delay ORD-101 fulfillment by 3+ weeks, severely impacting fulfilment rate KPI and customer satisfaction. Also considered reducing ORD-101 quantity, but this violates Urgent Customer Demand preference rule.",
-    "follow_up": {
-      "to": "cleartechglass@supply.com",
-      "subject": "Urgent Order Request - Tempered Glass Panel (RAW-004) for YamaTech Manufacturing",
-      "body": "Dear ClearTech Glass Supply, We are YamaTech, a manufacturing company referred to us by Prime Materials. We urgently need to source Tempered Glass Panel (RAW-004) as our primary supplier is experiencing an extended outage. We require approximately 1,000 units for immediate production needs, with potential for ongoing orders. Could you please provide: 1) Unit pricing for 1,000+ units, 2) Confirmation of 10-12 day lead time, 3) Earliest possible delivery date for this quantity, 4) Any bulk discount tiers available. Time is critical as we have customer orders pending. Please respond at your earliest convenience. Thank you, YamaTech Supply Chain",
-      "reason": "Need to obtain pricing and confirm lead time from alternative supplier before committing budget. Cannot create PO without confirmed pricing. Urgency requires immediate outreach to minimize fulfilment delay."
-    },
-    "status": "Completed",
-    "inference": "Primary supplier Prime Materials is out of RAW-004 until late May due to furnace repairs. They referred us to alternative supplier ClearTech Glass Supply with 10-12 day lead time. This creates a critical supply gap for SKU-A production.",
-    "decision": "Initiate contact with alternative supplier ClearTech Glass Supply to procure RAW-004 and add them as an approved supplier, while awaiting pricing confirmation before creating a purchase order.",
-    "actions": [
-      "Identified RAW-004 supply disruption from Prime Materials",
-      "Calculated RAW-004 requirement: 1000+ units needed for ORD-101 alone",
-      "Verified current RAW-004 stock (150) is insufficient even for WO-001 (needs 160)",
-      "Initiated contact with ClearTech Glass Supply for emergency procurement",
-      "Flagged need to add ClearTech as supplier in suppliers.csv",
-      "Automatically sent follow-up email to cleartechglass@supply.com"
-    ],
-    "files_updated": [],
-    "risks": [
-      "ClearTech pricing may exceed budget constraints",
-      "10-12 day lead time may cause slight delay on ORD-101 (due May 5)",
-      "ClearTech may not have sufficient stock either",
-      "Single alternative supplier creates concentration risk",
-      "Production of SKU-A remains blocked until RAW-004 arrives"
-    ]
-  },
-  {
-    "email_id": "MSG-010",
-    "date": "2026-04-25 17:09",
-    "sender": "inventory@yamatech.com",
-    "subject": "RFQ - Copper Winding Coil (RAW-003) Emergency Order",
-    "intent": "analysis",
-    "work_name": "RFQ - Copper Winding Coil (RAW-003) Emergency Order",
-    "affected_source": "emails.csv",
-    "agent_description": "",
-    "reasoning_detail": "",
-    "preference_refs": [],
-    "kpi_alignment": [],
-    "confidence": "Medium",
-    "guardrail_status": "Needs Review",
-    "alternative_considered": "",
-    "follow_up": null,
-    "status": "In Progress",
-    "inference": "AI Error: Error code: 504 - {'type': 'https://developers.cloudflare.com/support/troubleshooting/http-status-codes/cloudflare-5xx-errors/error-504/', 'title': 'Error 504: Gateway time-out', 'status': 504, 'detail': 'The origin web server did not respond to Cloudflare within the allowed time. This typically means the origin is overloaded or a backend process is taking too long.', 'instance': '9f1c63dbeeb8494c', 'error_code': 504, 'error_name': 'origin_gateway_timeout', 'error_category': 'origin_error', 'ray_id': '9f1c63dbeeb8494c', 'timestamp': '2026-04-25T09:42:06Z', 'zone': 'api.ilmu.ai', 'cloudflare_error': True, 'retryable': True, 'retry_after': 120, 'owner_action_required': True, 'what_you_should_do': '**Wait and retry.** Back off for at least 120 seconds. If the error persists, the website operator should investigate long-running processes on the origin server.', 'footer': 'This error was generated by Cloudflare on behalf of the website owner.'}",
-    "decision": "Fallback: Manual review required.",
-    "actions": [],
-    "files_updated": [],
-    "risks": []
-  },
-  {
-    "email_id": "MSG-011",
-    "date": "2026-04-25 17:10",
-    "sender": "procurement@autopartscorp.com",
-    "subject": "Second Order Revision - SKU-B Reduction and SKU-D Addition",
-    "intent": "analysis",
-    "work_name": "Second Order Revision - SKU-B Reduction and SKU-D Addition",
-    "affected_source": "emails.csv",
-    "agent_description": "",
-    "reasoning_detail": "",
-    "preference_refs": [],
-    "kpi_alignment": [],
-    "confidence": "Medium",
-    "guardrail_status": "Needs Review",
-    "alternative_considered": "",
-    "follow_up": null,
-    "status": "In Progress",
-    "inference": "AI Error: Error code: 504 - {'type': 'https://developers.cloudflare.com/support/troubleshooting/http-status-codes/cloudflare-5xx-errors/error-504/', 'title': 'Error 504: Gateway time-out', 'status': 504, 'detail': 'The origin web server did not respond to Cloudflare within the allowed time. This typically means the origin is overloaded or a backend process is taking too long.', 'instance': '9f1c688b8ee913e3', 'error_code': 504, 'error_name': 'origin_gateway_timeout', 'error_category': 'origin_error', 'ray_id': '9f1c688b8ee913e3', 'timestamp': '2026-04-25T09:45:18Z', 'zone': 'api.ilmu.ai', 'cloudflare_error': True, 'retryable': True, 'retry_after': 120, 'owner_action_required': True, 'what_you_should_do': '**Wait and retry.** Back off for at least 120 seconds. If the error persists, the website operator should investigate long-running processes on the origin server.', 'footer': 'This error was generated by Cloudflare on behalf of the website owner.'}",
-    "decision": "Fallback: Manual review required.",
-    "actions": [],
-    "files_updated": [],
-    "risks": []
-  },
-  {
-    "email_id": "MSG-012",
-    "date": "2026-04-25 17:11",
-    "sender": "sales@fastcompmetals.com",
-    "subject": "RE: RFQ RAW-003 - Partial Allocation Available",
-    "intent": "analysis",
-    "work_name": "Confirm RAW-003 Purchase Order 600 units at $8.75/unit",
-    "affected_source": "suppliers.csv",
-    "agent_description": "Created purchase order for 600 units of RAW-003 from FastCompMetals at $8.75/unit ($5,250 total), delivery expected ~April 30th. Updated suppliers.csv with new PO. Committed $5,250 from Operating Cash in finance.csv. Projected inventory increase of 600 units RAW-003 upon delivery.",
-    "reasoning_detail": "RAW-003 is critically below reorder point (280 vs 500) and is blocking two work orders: WO-002 (SKU-C, Halted - RAW-003 Exhausted) and WO-004 (SKU-D, Not Started). ORD-103 (100 SKU-D) is due May 5th and requires 200 RAW-003 units. ORD-104 (250 SKU-C, due May 10) requires 750 RAW-003. Total RAW-003 needed for open orders: ~1,150 units. Current stock: 280. The 600-unit allocation at $8.75/unit costs $5,250, which falls within the Low budget threshold (<$6,500), satisfying Budget Constraints (Rule 1). This partial allocation unblocks WO-002 and enables partial fulfillment of urgent ORD-103. Without this order, stockout on SKU-C and SKU-D is certain, violating stockout and fulfilment KPIs.",
-    "preference_refs": [
-      "Budget Constraints",
-      "Urgent Customer Demand",
-      "Low Stock Replenishment",
-      "Production Blockage"
-    ],
-    "kpi_alignment": [
-      "Stockout risk reduction for SKU-C and SKU-D",
-      "Fulfilment rate protection for ORD-103 (due May 5)",
-      "LeadTime improvement - delivery by April 30 enables May 5 order"
-    ],
-    "confidence": "High",
-    "guardrail_status": "Passed",
-    "alternative_considered": "Considered rejecting partial allocation and waiting for full 1,000+ unit order. Rejected because: (1) urgent ORD-103 due May 5th cannot wait until after May 15th, (2) WO-002 remains halted indefinitely, (3) 600 units at $8.75 is within budget while securing critical supply. Also considered ordering from Southeast Asia distributors as suggested, but cannot guarantee pricing or timing, making this too risky for urgent orders.",
-    "follow_up": {
-      "to": "sales@fastcompmetals.com",
-      "subject": "RE: RFQ RAW-003 - Confirming 600-unit Allocation",
-      "body": "Dear FastCompMetals, we confirm the 600-unit allocation of RAW-003 at $8.75/unit. Please process this order for delivery by April 30th. We will assess our additional requirements and may place a follow-up order for the remaining quantity. Please confirm receipt of this order and expected delivery date.",
-      "reason": "Need to formally confirm the 600-unit PO to secure allocation and get delivery commitment"
-    },
-    "status": "Completed",
-    "inference": "Supplier FastCompMetals can only allocate 600 units of RAW-003 at $8.75/unit with 8-day delivery (~April 30). Remaining 400-600 units unavailable until after May 15 at higher price ($10.50/unit). This is a partial fulfillment of our RFQ due to global shortage.",
-    "decision": "Accept the 600-unit partial allocation at $8.75/unit to unblock production and meet urgent May 5th orders. Defer decision on remaining quantity pending further analysis of alternative sourcing options.",
-    "actions": [
-      "Confirmed purchase of 600 units RAW-003 at $8.75/unit from FastCompMetals",
-      "Created PO in suppliers.csv for 600 units RAW-003, $5,250 total, expected delivery April 30",
-      "Committed $5,250 from Operating Cash (balance: $47,550 - $5,250 = $42,300)",
-      "Drafted confirmation email to FastCompMetals",
-      "Flagged need to source additional 270+ units RAW-003 from alternative suppliers for ORD-104/ORD-105",
-      "Automatically sent follow-up email to sales@fastcompmetals.com"
-    ],
-    "files_updated": [
-      "inventory.csv",
-      "finance.csv"
-    ],
-    "risks": [
-      "600 units insufficient for full order fulfillment - need ~870 units total for orders, leaving 270+ unit gap",
-      "ORD-104 (250 SKU-C, due May 10) may be partially unfulfilled without additional RAW-003",
-      "ORD-105 (100 SKU-D, due May 10) at risk if no additional RAW-003 sourced",
-      "Remaining RAW-003 from FastCompMetals will cost $10.50/unit (20% price increase) after May 15",
-      "Southeast Asia distributor pricing and availability uncertain"
-    ]
-  },
-  {
-    "email_id": "MSG-013",
-    "date": "2026-04-25 17:12",
-    "sender": "producatech.com",
-    "subject": "Production Floor Daily Update - Apr 23 Morning",
-    "intent": "analysis",
-    "work_name": "Production Floor Daily Update - Apr 23 Morning",
-    "affected_source": "emails.csv",
-    "agent_description": "",
-    "reasoning_detail": "",
-    "preference_refs": [],
-    "kpi_alignment": [],
-    "confidence": "Medium",
-    "guardrail_status": "Needs Review",
-    "alternative_considered": "",
-    "follow_up": null,
-    "status": "In Progress",
-    "inference": "AI Error: Error code: 504 - {'type': 'https://developers.cloudflare.com/support/troubleshooting/http-status-codes/cloudflare-5xx-errors/error-504/', 'title': 'Error 504: Gateway time-out', 'status': 504, 'detail': 'The origin web server did not respond to Cloudflare within the allowed time. This typically means the origin is overloaded or a backend process is taking too long.', 'instance': '9f1c6fc79ccf55f9', 'error_code': 504, 'error_name': 'origin_gateway_timeout', 'error_category': 'origin_error', 'ray_id': '9f1c6fc79ccf55f9', 'timestamp': '2026-04-25T09:50:14Z', 'zone': 'api.ilmu.ai', 'cloudflare_error': True, 'retryable': True, 'retry_after': 120, 'owner_action_required': True, 'what_you_should_do': '**Wait and retry.** Back off for at least 120 seconds. If the error persists, the website operator should investigate long-running processes on the origin server.', 'footer': 'This error was generated by Cloudflare on behalf of the website owner.'}",
+    "inference": "AI Error: Error code: 504 - {'type': 'https://developers.cloudflare.com/support/troubleshooting/http-status-codes/cloudflare-5xx-errors/error-504/', 'title': 'Error 504: Gateway time-out', 'status': 504, 'detail': 'The origin web server did not respond to Cloudflare within the allowed time. This typically means the origin is overloaded or a backend process is taking too long.', 'instance': '9f1cb074d91013e3', 'error_code': 504, 'error_name': 'origin_gateway_timeout', 'error_category': 'origin_error', 'ray_id': '9f1cb074d91013e3', 'timestamp': '2026-04-25T10:34:23Z', 'zone': 'api.ilmu.ai', 'cloudflare_error': True, 'retryable': True, 'retry_after': 120, 'owner_action_required': True, 'what_you_should_do': '**Wait and retry.** Back off for at least 120 seconds. If the error persists, the website operator should investigate long-running processes on the origin server.', 'footer': 'This error was generated by Cloudflare on behalf of the website owner.'}",
     "decision": "Fallback: Manual review required.",
     "actions": [],
     "files_updated": [],
     "risks": []
   }
-]h
+]
