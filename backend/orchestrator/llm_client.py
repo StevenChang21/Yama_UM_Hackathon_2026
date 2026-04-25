@@ -52,14 +52,14 @@ class LLMClient(ABC):
         pass
 
 
-class ILMUClient(LLMClient):
+class GeminiClient(LLMClient):
     """
-    Concrete LLM client for the ILMU API (YTL AI Labs, OpenAI-compatible).
+    Concrete LLM client for the Google Gemini API.
 
-    Uses the openai Python SDK pointed at ILMU's base_url.
+    Uses the openai Python SDK pointed at Gemini's OpenAI-compatible endpoint.
     """
 
-    def __init__(self, api_key: str, base_url: str = "https://api.ilmu.dev/v1", model: str = "ilmu-1.0"):
+    def __init__(self, api_key: str, base_url: str = "https://generativelanguage.googleapis.com/v1beta/openai/", model: str = "gemini-3.1-flash-lite-preview"):
         self._client = OpenAI(api_key=api_key, base_url=base_url)
         self._model = model
 

@@ -423,5 +423,148 @@
     "actions": [],
     "files_updated": [],
     "risks": []
+  },
+  {
+    "email_id": "MSG-013",
+    "date": "2026-04-25 15:02",
+    "sender": "production@yamatech.com",
+    "subject": "Production Floor Daily Update - Apr 23 Morning",
+    "intent": "analysis",
+    "work_name": "Production Floor Daily Update - Apr 23 Morning",
+    "affected_source": "emails.csv",
+    "agent_description": "Agent could not process \u2014 AI client not configured.",
+    "reasoning_detail": "",
+    "preference_refs": [],
+    "kpi_alignment": [],
+    "confidence": "Medium",
+    "guardrail_status": "Needs Review",
+    "alternative_considered": "",
+    "follow_up": null,
+    "status": "Blocked",
+    "inference": "AI Client not configured.",
+    "decision": "Skipped processing.",
+    "actions": [],
+    "files_updated": [],
+    "risks": []
+  },
+  {
+    "email_id": "MSG-014",
+    "date": "Sat, 25 Apr 2026 16:28:33 +0800",
+    "sender": "Yu Wong <ywon0146@student.monash.edu>",
+    "subject": "Order information",
+    "intent": "analysis",
+    "work_name": "Reject unrealistic customer order MSG-014",
+    "affected_source": "emails.csv",
+    "agent_description": "Flagged MSG-014 as an invalid request due to impossible quantity (1,000,000 units) and impossible delivery timeline (same-day). No sales order created.",
+    "reasoning_detail": "The requested quantity of 1,000,000 SKU-A exceeds current raw material inventory and production capacity by several orders of magnitude. The request is physically impossible to fulfill given current stock levels (RAW-001: 1520 units) and the BOM requirements (2x RAW-001 per SKU-A). The request is treated as spam/non-viable.",
+    "preference_refs": [
+      "Urgent Customer Demand",
+      "Budget Constraints"
+    ],
+    "kpi_alignment": [
+      "Fulfilment rate protection",
+      "Operational stability"
+    ],
+    "confidence": "High",
+    "guardrail_status": "Passed",
+    "alternative_considered": "Attempting to partial-fill the order; rejected because the requested quantity is 2000x larger than existing pending orders and lacks financial backing.",
+    "follow_up": {
+      "to": "ywon0146@student.monash.edu",
+      "subject": "Re: Order information",
+      "body": "Thank you for your interest in YamaTech. We are unable to process your request for 1,000,000 units of SKU-A as it exceeds our current manufacturing capacity and raw material availability. Please contact our sales department for standard lead times and minimum order quantities.",
+      "reason": "Inform the customer that the request is non-viable to maintain professional communication standards."
+    },
+    "status": "Follow-Up Required",
+    "inference": "The email is an unrealistic, high-volume request that cannot be fulfilled.",
+    "decision": "Reject the order request and notify the sender.",
+    "actions": [
+      "Flagged email as non-viable",
+      "Drafted rejection email"
+    ],
+    "files_updated": [],
+    "risks": [
+      "Potential customer dissatisfaction",
+      "Spam/unrealistic demand"
+    ]
+  },
+  {
+    "email_id": "MSG-015",
+    "date": "Sat, 25 Apr 2026 18:10:49 +0800",
+    "sender": "Steven Chang <changstevenn@gmail.com>",
+    "subject": "\u8fd8\u94b1bro",
+    "intent": "analysis",
+    "work_name": "\u8fd8\u94b1bro",
+    "affected_source": "emails.csv",
+    "agent_description": "",
+    "reasoning_detail": "",
+    "preference_refs": [],
+    "kpi_alignment": [],
+    "confidence": "Medium",
+    "guardrail_status": "Needs Review",
+    "alternative_considered": "",
+    "follow_up": null,
+    "status": "Skipped",
+    "inference": "Email classified as spam/irrelevant.",
+    "decision": "Deleted from database.",
+    "actions": [],
+    "files_updated": [],
+    "risks": []
+  },
+  {
+    "email_id": "MSG-016",
+    "date": "Sat, 25 Apr 2026 18:15:59 +0800",
+    "sender": "Steven Chang <changstevenn@gmail.com>",
+    "subject": "Delays for crude oil raw materials",
+    "intent": "analysis",
+    "work_name": "Adjust procurement lead times for RAW-003",
+    "affected_source": "logistics.csv",
+    "agent_description": "Updated the lead time for raw material suppliers providing crude-oil derivatives (RAW-003) from 15 days to 30 days in the logistics database to account for the Strait of Hormuz disruption.",
+    "reasoning_detail": "The email indicates a 100% increase in lead time for critical raw materials. RAW-003 is currently exhausted, causing a halt in WO-002 (SKU-C). Extending the lead time ensures that future procurement planning triggers reorder points earlier, preventing further production stoppages for SKU-C and SKU-D which rely on RAW-003.",
+    "preference_refs": [
+      "Supplier Delay",
+      "Production Blockage"
+    ],
+    "kpi_alignment": [
+      "Stockout risk reduction",
+      "Supply chain resilience"
+    ],
+    "confidence": "High",
+    "guardrail_status": "Passed",
+    "alternative_considered": "I considered placing an immediate emergency order for RAW-003, but without knowing the current supplier's specific stock availability or price surge, updating the lead time parameters is the safer systemic action to prevent future stockouts.",
+    "follow_up": null,
+    "status": "Completed",
+    "inference": "The Strait of Hormuz blockage will cause a significant delay in the supply chain for crude-oil based raw materials (RAW-003).",
+    "decision": "Update logistics parameters to reflect the new 30-day lead time to prevent future production halts.",
+    "actions": [
+      "Updated logistics.csv lead time for RAW-003 to 30 days"
+    ],
+    "files_updated": [],
+    "risks": [
+      "Potential stockout of RAW-003 for pending orders ORD-104 and ORD-105",
+      "Increased production lead times for SKU-C and SKU-D"
+    ]
+  },
+  {
+    "email_id": "MSG-017",
+    "date": "Sat, 25 Apr 2026 18:20:32 +0800",
+    "sender": "Steven Chang <changstevenn@gmail.com>",
+    "subject": "New sales order 067",
+    "intent": "analysis",
+    "work_name": "New sales order 067",
+    "affected_source": "emails.csv",
+    "agent_description": "",
+    "reasoning_detail": "",
+    "preference_refs": [],
+    "kpi_alignment": [],
+    "confidence": "Medium",
+    "guardrail_status": "Needs Review",
+    "alternative_considered": "",
+    "follow_up": null,
+    "status": "In Progress",
+    "inference": "AI Error: Error code: 503 - [{'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}]",
+    "decision": "Fallback: Manual review required.",
+    "actions": [],
+    "files_updated": [],
+    "risks": []
   }
 ]

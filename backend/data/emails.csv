@@ -12,3 +12,22 @@ MSG-010,inventory@yamatech.com,RFQ - Copper Winding Coil (RAW-003) Emergency Ord
 MSG-011,procurement@autopartscorp.com,Second Order Revision - SKU-B Reduction and SKU-D Addition,2026-04-25 15:00,"Hi YamaTech team, we need to make one more adjustment to our order. Our engineering team has decided to substitute 100 units of SKU-B with SKU-D (Compact Drive Unit) for a new assembly variant they are trialing. Please revise as follows: ORD-102 (SKU-B): reduce from 200 to 100 units. New line ORD-103 (SKU-D): 100 units. Total order value should remain approximately the same. May 5th deadline applies to all three lines. We apologize for the repeated changes - this is the final revision."
 MSG-012,sales@fastcompmetals.com,RE: RFQ RAW-003 - Partial Allocation Available,2026-04-25 15:01,"Dear YamaTech Procurement, thank you for your urgent request. Unfortunately due to the global shortage we can only allocate 600 units of Copper Winding Coil (RAW-003) at the current price of $8.75/unit (delivery in 8 days, arriving ~April 30th). The remaining 400-600 units you require would be available after May 15th at the new price of approximately $10.50/unit. We recommend you confirm the 600-unit allocation today to secure it. If you require additional quantities sooner, we suggest checking with Southeast Asia regional distributors, though we cannot guarantee pricing or availability."
 MSG-013,production@yamatech.com,Production Floor Daily Update - Apr 23 Morning,2026-04-25 15:02,"Good morning. Daily status: WO-001 (SKU-A, 80 units) is still running, expected completion April 26th. RAW-001 will be fully consumed when this completes. WO-002 (SKU-C) has been halted as of this morning - RAW-003 stock hit zero overnight, we managed to complete 50 out of 120 planned units. WO-003 (SKU-B) remains blocked, no RAW-001 available to start. WO-004 (SKU-D) has not started - both RAW-002 and RAW-003 are below safe production threshold. Summary: 2 of 4 active work orders are completely stopped. We urgently need confirmed purchase orders for RAW-001 (1200+ units), RAW-003 (870+ units), and RAW-004 (850+ units) to resume full production. Without action today we will not meet either the May 5th or May 10th customer deadlines."
+MSG-014,Yu Wong <ywon0146@student.monash.edu>,Order information,"Sat, 25 Apr 2026 16:28:33 +0800","1000000 SKU-A, I want it by todayyy now!!!!1rkbggidufds
+THANKYOU"
+MSG-016,Steven Chang <changstevenn@gmail.com>,Delays for crude oil raw materials,"Sat, 25 Apr 2026 18:15:59 +0800","Due to the blockage of strait of hormuz, the crude oil freight
+transportation is delayed to 1 month instead of 15 days, kindly take note
+and plan ahead.
+
+Best regards,
+Juan Baby Oil Inc."
+MSG-017,Steven Chang <changstevenn@gmail.com>,New sales order 067,"Sat, 25 Apr 2026 18:20:32 +0800","Dear inventory team,
+
+New customer Moonway recent ordered 30 units sku-A need by next week and
+100 units sku-A reserved for middle of next month. The 30 sku-A order is
+fully paid, the 100 units order has paid 50% as deposit.
+
+Please confirm me, i need confirm customer before tonight whether can
+fulfill or not
+
+Thanks,
+Best Regards"
