@@ -151,6 +151,25 @@ def delete_email_alerts():
     return {"status": "cleared"}
 
 
+# ── Preferences Endpoints ─────────────────────────────────────
+
+@app.get("/api/preferences")
+def get_preferences():
+    """Return the saved user preferences."""
+    pref_path = os.path.join("data", "preferences.json")
+    if os.path.exists(pref_path):
+        with open(pref_path) as f:
+            return json.load(f)
+    return {}
+
+@app.post("/api/preferences")
+def update_preferences(prefs: dict):
+    """Update and save the user preferences."""
+    pref_path = os.path.join("data", "preferences.json")
+    with open(pref_path, "w") as f:
+        json.dump(prefs, f, indent=2)
+    return {"status": "saved"}
+
 # ── Agent Endpoints & Background Loop ───────────────────────────
 
 @app.on_event("startup")

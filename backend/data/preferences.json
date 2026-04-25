@@ -1,0 +1,33 @@
+{
+  "rules": [
+    { "id": "urgent-demand", "label": "Urgent Customer Demand", "color": "#e20015" },
+    { "id": "low-stock", "label": "Low Stock Replenishment", "color": "#00a8cb" },
+    { "id": "production-block", "label": "Production Blockage", "color": "#ff6b35" },
+    { "id": "supplier-delay", "label": "Supplier Delay", "color": "#f59e0b" },
+    { "id": "budget-constraint", "label": "Budget Constraints", "color": "#00884a" }
+  ],
+  "budget": { "low": 5000, "medium": 25000, "high": 75000 },
+  "approvalThreshold": 50000,
+  "reorderQty": 500,
+  "supplierWeights": {
+    "preferred": 35,
+    "cost": 25,
+    "leadTime": 25,
+    "reliability": 15
+  },
+  "kpis": {
+    "stockout": true,
+    "fulfilment": true,
+    "holdingCost": false,
+    "leadTime": true,
+    "budgetUtil": false
+  },
+  "allocRules": {
+    "prioritiseDeadline": true,
+    "allowReallocation": true,
+    "checkLeadTime": true,
+    "protectFulfilment": true,
+    "avoidDelays": true,
+    "autoWorkOrders": false
+  }
+}

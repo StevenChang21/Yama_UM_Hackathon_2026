@@ -60,6 +60,34 @@ def process_emails():
     
     emails_processed_this_run = 0
 
+    # Load Preferences
+    pref_path = os.path.join(DATA_DIR, "preferences.json")
+    prefs = {}
+    if os.path.exists(pref_path):
+        with open(pref_path, "r") as f:
+            prefs = json.load(f)
+            
+    # Format dynamic rules
+    rules = prefs.get("rules", [
+        {"label": "Urgent Customer Demand"},
+        {"label": "Low Stock Replenishment"},
+        {"label": "Production Blockage"},
+        {"label": "Supplier Delay"},
+        {"label": "Budget Constraints"}
+    ])
+    budget = prefs.get("budget", {"low": 5000, "medium": 25000, "high": 75000})
+    kpis = prefs.get("kpis", {})
+    
+    pref_lines = []
+    for i, r in enumerate(rules):
+        pref_lines.append(f"{i+1}. {r.get('label', 'Rule')} — prioritize this rule appropriately.")
+    
+    pref_lines.append(f"Budget Constraints: Low < ${budget.get('low')}, Medium < ${budget.get('medium')}, High < ${budget.get('high')}")
+    active_kpis = [k for k, v in kpis.items() if v]
+    pref_lines.append(f"Active KPIs to protect: {', '.join(active_kpis) if active_kpis else 'None'}")
+    
+    dynamic_prefs_str = "\n".join(pref_lines)
+
     for _, email in emails_df.iterrows():
         if emails_processed_this_run >= 1:
             break
@@ -105,7 +133,7 @@ def process_emails():
         # If AI is unavailable, skip with fallback
         if not ai_client:
             entry["inference"] = "AI Client not configured."
-            entry["decision"] = "Skipped processing."
+            entry["decision"] = "Fallback: Manual review required."
             entry["agent_description"] = "Agent could not process — AI client not configured."
             entry["status"] = "Blocked"
             audit_log.append(entry)
@@ -113,30 +141,27 @@ def process_emails():
                 json.dump(audit_log, f, indent=2, default=str)
             continue
 
-        # Build rich context
-        inv_context = []
-        for raw_id in ["RAW-001", "RAW-002", "RAW-003", "RAW-004", "RAW-005"]:
-            stock = get_current_stock(inv_df, raw_id)
-            inv_context.append(f"  - {raw_id}: {stock} units")
-
+        # Build context
         bom_df = load_csv("bom.csv")
-        bom_lines = []
-        for _, row in bom_df.iterrows():
-            bom_lines.append(f"  - {row['parent_id']} requires {row['qty_required']}x {row['child_id']}")
-
-        sales_latest = latest_per_group(sales_df, "valid_from", "order_id")
+        bom_lines = [f"- {r['parent_id']} needs {r['qty_required']}x {r['child_id']}" for _, r in bom_df.iterrows()]
+        
+        inv_context = []
+        for _, row in latest_per_group(inv_df, "valid_from", "item_id").iterrows():
+            inv_context.append(f"- {row['item_id']}: {row['current_stock']} units (reorder point: {row.get('reorder_point', 0)}, unit cost: ${row.get('unit_cost', 0)})")
+        
         sales_lines = []
-        for _, row in sales_latest.iterrows():
-            sales_lines.append(f"  - {row['order_id']}: {row['qty']} units of {row['item_id']} for {row['customer']}, due {row['due_date']}, status: {row['status']}")
-
-        mfg_latest = latest_per_group(mfg_df, "valid_from", "work_order_id")
+        for _, s in latest_per_group(sales_df, "valid_from", "order_id").iterrows():
+            if s["status"] != "Completed":
+                sales_lines.append(f"- {s['order_id']}: {s['qty']} units of {s['item_id']}, due {s['due_date']}, status: {s['status']}")
+                
         mfg_lines = []
-        for _, row in mfg_latest.iterrows():
-            mfg_lines.append(f"  - {row['work_order_id']}: {row['item_id']}, status: {row['status']}, qty: {row['qty']}, eta: {row['eta']}")
-
+        for _, r in latest_per_group(mfg_df, "valid_from", "work_order_id").iterrows():
+            if r["status"] != "Completed":
+                mfg_lines.append(f"- {r['work_order_id']}: {r['item_id']}, status: {r['status']}, {r['qty']} pending units")
+        
         cash = get_current_balance(fin_df, "Operating Cash")
 
-        prompt = f"""You are an autonomous supply chain AI agent for YamaTech, a manufacturer of precision control modules.
+        prompt = f"""You are an autonomous supply chain AI agent for YamaTech.
 
 IMPORTANT CONTEXT:
 - YamaTech MANUFACTURES finished goods (SKU-A, SKU-B, SKU-C, SKU-D) in-house using raw materials (RAW-xxx).
@@ -159,12 +184,8 @@ Manufacturing Work Orders:
 
 Operating Cash: ${cash:.2f}
 
-PREFERENCE RULES (in priority order):
-1. Urgent Customer Demand — prioritise customer orders
-2. Low Stock Replenishment — reorder when below reorder point
-3. Production Blockage — unblock halted manufacturing
-4. Supplier Delay — mitigate supplier disruptions
-5. Budget Constraints — stay within spending limits
+PREFERENCE RULES (in priority order configured by user):
+{dynamic_prefs_str}
 
 NEW EMAIL [{eid}]:
 Date: {date}
