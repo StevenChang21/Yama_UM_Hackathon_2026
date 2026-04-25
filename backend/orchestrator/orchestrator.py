@@ -7,7 +7,7 @@ This is where the AI agent "thinks". It runs a loop:
 3. If no tool_calls → parse the final JSON answer and send to frontend
 
 Dependency Inversion: This class depends on LLMClient and StatusReporter
-abstractions, not on concrete classes like ILMUClient or WebSocketReporter.
+abstractions, not on concrete classes like GeminiClient or WebSocketReporter.
 """
 
 import os
@@ -211,7 +211,8 @@ def create_orchestrator(as_of_date: Optional[str] = None) -> Orchestrator:
     tool_registry = _build_tool_registry(data_repo)
 
     gemini_api_key = os.environ.get("GEMINI_API_KEY")
-    llm_client = GeminiClient(api_key=gemini_api_key) if gemini_api_key else None
+    gemini_model = os.environ.get("GEMINI_MODEL", "gemini-3.1-flash-lite")
+    llm_client = GeminiClient(api_key=gemini_api_key, model=gemini_model) if gemini_api_key else None
 
     return Orchestrator(llm_client=llm_client, tool_registry=tool_registry)
 

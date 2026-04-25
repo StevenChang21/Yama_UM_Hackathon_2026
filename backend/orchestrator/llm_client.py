@@ -59,7 +59,7 @@ class GeminiClient(LLMClient):
     Uses the openai Python SDK pointed at Gemini's OpenAI-compatible endpoint.
     """
 
-    def __init__(self, api_key: str, base_url: str = "https://generativelanguage.googleapis.com/v1beta/openai/", model: str = "gemini-3.1-flash-lite-preview"):
+    def __init__(self, api_key: str, model: str, base_url: str = "https://generativelanguage.googleapis.com/v1beta/openai/"):
         self._client = OpenAI(api_key=api_key, base_url=base_url)
         self._model = model
 

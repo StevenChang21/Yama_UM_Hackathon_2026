@@ -1,4 +1,4 @@
-"""
+r"""
 Email Reader Module — IMAP poller.
 
 Polls an IMAP mailbox every 10 minutes for unread emails,
