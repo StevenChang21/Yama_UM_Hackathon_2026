@@ -8,10 +8,41 @@ import json
 import csv
 import pandas as pd
 from datetime import datetime
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from dotenv import load_dotenv
+
+load_dotenv()
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 AUDIT_LOG_PATH = os.path.join(DATA_DIR, "audit_log.json")
 STATUS_PATH = os.path.join(DATA_DIR, "agent_status.json")
+
+def send_real_email(to_address, subject, body):
+    sender_email = os.environ.get("IMAP_EMAIL")
+    sender_password = os.environ.get("IMAP_PASSWORD")
+    
+    if not sender_email or not sender_password:
+        print("SMTP Credentials missing. Cannot send real email.")
+        return False
+        
+    try:
+        msg = MIMEMultipart()
+        msg['From'] = sender_email
+        msg['To'] = to_address
+        msg['Subject'] = subject
+        msg.attach(MIMEText(body, 'plain'))
+        
+        server = smtplib.SMTP('smtp.gmail.com', 587)
+        server.starttls()
+        server.login(sender_email, sender_password)
+        server.send_message(msg)
+        server.quit()
+        return True
+    except Exception as e:
+        print(f"Failed to send real email to {to_address}: {e}")
+        return False
 
 def remove_spam_from_emails_csv(spam_id):
     csv_path = os.path.join(DATA_DIR, "emails.csv")
@@ -349,19 +380,34 @@ If no CSV updates are needed, leave arrays empty. Return ONLY valid JSON, no mar
         # Auto-send email logic
         if entry.get("follow_up"):
             import csv
+            to_addr = entry["follow_up"].get("to", "")
+            subj = entry["follow_up"].get("subject", "")
+            body = entry["follow_up"].get("body", "")
+            reason = entry["follow_up"].get("reason", "")
+            
             outbox_path = os.path.join(DATA_DIR, "outbox.csv")
             with open(outbox_path, 'a', newline='', encoding='utf-8') as csvfile:
                 writer = csv.writer(csvfile)
                 writer.writerow([
                     datetime.now().isoformat(),
-                    entry["follow_up"].get("to", ""),
-                    entry["follow_up"].get("subject", ""),
-                    entry["follow_up"].get("body", ""),
-                    entry["follow_up"].get("reason", "")
+                    to_addr,
+                    subj,
+                    body,
+                    reason
                 ])
-            entry["actions"].append(f"Automatically sent follow-up email to {entry['follow_up'].get('to', '')}")
-            entry["status"] = "Completed"
-            entry["guardrail_status"] = "Passed"
+                
+            # Send the actual email
+            success = send_real_email(to_addr, subj, body)
+            
+            if success:
+                entry["actions"].append(f"Successfully sent real follow-up email to {to_addr}")
+                entry["status"] = "Completed"
+                entry["guardrail_status"] = "Passed"
+            else:
+                entry["actions"].append(f"Failed to send real email to {to_addr}. Logged to outbox.")
+                entry["status"] = "Follow-Up Required"
+                entry["guardrail_status"] = "Needs Review"
+                entry["risks"].append(f"Email delivery to {to_addr} failed.")
 
         audit_log.append(entry)
 

@@ -62,11 +62,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-MOCK_ITEMS = [
-    {"id": "ITEM-001", "name": "Raw Steel Component X", "current_stock": 150, "reorder_point": 200, "supplier_lead_time_days": 14},
-    {"id": "ITEM-002", "name": "Aluminum Casting Y", "current_stock": 500, "reorder_point": 100, "supplier_lead_time_days": 7},
-    {"id": "ITEM-003", "name": "Plastic Housing Z", "current_stock": 45, "reorder_point": 50, "supplier_lead_time_days": 30},
-]
+
 
 def _latest_per_group(df: pd.DataFrame, date_col: str, group_col: str) -> pd.DataFrame:
     """Return the most recent row per group, used by REST endpoints to show current state."""
@@ -97,8 +93,8 @@ def get_inventory():
                 "risk_level": risk_level
             })
         return inventory_status
-    except Exception:
-        return MOCK_ITEMS
+    except Exception as e:
+        return {"error": str(e)}
 
 @app.get("/api/finance")
 def get_finance():

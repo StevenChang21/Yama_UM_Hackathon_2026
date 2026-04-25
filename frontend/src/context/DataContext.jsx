@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect, useRef } from "react";
 
-const MockDataContext = createContext();
+const DataContext = createContext();
 
 function transformInventory(data) {
   return {
@@ -39,16 +39,9 @@ function transformInventory(data) {
   };
 }
 
-export const MockDataProvider = ({ children }) => {
+export const DataProvider = ({ children }) => {
   const [inventory, setInventory] = useState({ rawMaterials: [], finishedGoods: [] });
-  const [inputs, setInputs] = useState({
-    demandForecast: 0,
-    productionCapacity: 0,
-    budget: 0,
-    salesNotes: "",
-    supplierNotes: "",
-    logisticsNotes: "",
-  });
+  const [inputs, setInputs] = useState({ budget: 0 });
   const [recommendation, setRecommendation] = useState(null);
   const [history, setHistory] = useState([]);
   const [bom, setBom] = useState([]);
@@ -224,7 +217,7 @@ export const MockDataProvider = ({ children }) => {
   }, [isAILoading]);
 
   return (
-    <MockDataContext.Provider
+    <DataContext.Provider
       value={{
         inventory,
         loading,
@@ -245,8 +238,8 @@ export const MockDataProvider = ({ children }) => {
       }}
     >
       {children}
-    </MockDataContext.Provider>
+    </DataContext.Provider>
   );
 };
 
-export { MockDataContext };
+export { DataContext };

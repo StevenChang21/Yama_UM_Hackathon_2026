@@ -1,5 +1,5 @@
 import React from "react";
-import { useMockData } from "../context/useMockData";
+import { useData } from "../context/useData";
 import SummaryCard from "../components/SummaryCard";
 import AlertBanner from "../components/AlertBanner";
 import { Package, TrendingUp, Cpu, DollarSign } from "lucide-react";
@@ -16,7 +16,7 @@ import {
 } from "recharts";
 
 const Dashboard = () => {
-  const { inventory, inputs } = useMockData();
+  const { inventory, inputs, manufacturing } = useData();
 
   const getLowStockItems = () => {
     return [
@@ -31,14 +31,25 @@ const Dashboard = () => {
 
   const lowStockItems = getLowStockItems();
 
-  const productionData = [
-    { name: "Jan", drill: 400, mower: 240 },
-    { name: "Feb", drill: 300, mower: 139 },
-    { name: "Mar", drill: 200, mower: 480 },
-    { name: "Apr", drill: 278, mower: 390 },
-    { name: "May", drill: 189, mower: 480 },
-    { name: "Jun", drill: 239, mower: 380 },
-  ];
+  const productionData = React.useMemo(() => {
+    if (!manufacturing) return [];
+    
+    // Group pending_units by sku
+    const aggregated = manufacturing.reduce((acc, curr) => {
+      // Only count units that are pending
+      if (curr.pending_units > 0) {
+        const existing = acc.find(item => item.name === curr.sku);
+        if (existing) {
+          existing.units += curr.pending_units;
+        } else {
+          acc.push({ name: curr.sku, units: curr.pending_units });
+        }
+      }
+      return acc;
+    }, []);
+    
+    return aggregated;
+  }, [manufacturing]);
 
   return (
     <div>
@@ -53,25 +64,11 @@ const Dashboard = () => {
         <AlertBanner
           type="danger"
           title="Critical Inventory Alerts"
-          message={`${lowStockItems.length} item(s) are below safe thresholds. Check inventory page for details.`}
+          message={`${lowStockItems.length} item(s) are below safe thresholds.`}
         />
       )}
 
-      <div className="grid-cols-4" style={{ marginBottom: "2rem" }}>
-        <SummaryCard
-          title="Demand Forecast"
-          value={inputs.demandForecast}
-          subtitle="Units next month"
-          icon={<TrendingUp size={24} />}
-          trend={12}
-        />
-        <SummaryCard
-          title="Prod. Capacity"
-          value={inputs.productionCapacity}
-          subtitle="Max units/month"
-          icon={<Cpu size={24} />}
-          colorClass="green"
-        />
+      <div className="grid-cols-2" style={{ marginBottom: "2rem" }}>
         <SummaryCard
           title="Budget"
           value={`$${inputs.budget.toLocaleString()}`}
@@ -92,10 +89,10 @@ const Dashboard = () => {
 
       <div className="grid-cols-2">
         <div className="card">
-          <h3 className="card-title">Production Output Trend</h3>
+          <h3 className="card-title">Current Production Status</h3>
           <div style={{ height: "300px", marginTop: "1rem" }}>
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={productionData}>
+              <BarChart data={productionData}>
                 <CartesianGrid
                   strokeDasharray="3 3"
                   vertical={false}
@@ -103,27 +100,14 @@ const Dashboard = () => {
                 />
                 <XAxis dataKey="name" axisLine={false} tickLine={false} />
                 <YAxis axisLine={false} tickLine={false} />
-                <Tooltip
-                  cursor={{ stroke: "var(--bosch-light-blue)", strokeWidth: 2 }}
+                <Tooltip cursor={{ fill: "#F8F9FA" }} />
+                <Bar
+                  dataKey="units"
+                  name="Pending Units"
+                  fill="var(--bosch-red)"
+                  radius={[4, 4, 0, 0]}
                 />
-                <Line
-                  type="monotone"
-                  dataKey="drill"
-                  name="Smart Drills"
-                  stroke="var(--bosch-red)"
-                  strokeWidth={3}
-                  dot={{ r: 4 }}
-                  activeDot={{ r: 6 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="mower"
-                  name="Robotic Mowers"
-                  stroke="var(--bosch-dark-blue)"
-                  strokeWidth={3}
-                  dot={{ r: 4 }}
-                />
-              </LineChart>
+              </BarChart>
             </ResponsiveContainer>
           </div>
         </div>

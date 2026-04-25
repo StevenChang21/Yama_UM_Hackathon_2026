@@ -1,7 +1,19 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Target, ShieldAlert, LineChart, CheckCircle2, AlertOctagon, Zap, Shield, FileSignature } from "lucide-react";
 
 const Strategy = () => {
+  const [approvalThreshold, setApprovalThreshold] = useState(50000);
+
+  useEffect(() => {
+    fetch("http://localhost:8000/api/preferences")
+      .then(res => res.json())
+      .then(data => {
+        if (data.approvalThreshold) {
+          setApprovalThreshold(data.approvalThreshold);
+        }
+      })
+      .catch(err => console.error(err));
+  }, []);
   return (
     <div>
       <header className="page-header">
@@ -50,7 +62,7 @@ const Strategy = () => {
       </section>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2rem" }}>
-        
+
         {/* Strategy Section */}
         <section className="card" style={{ margin: 0, display: "flex", flexDirection: "column" }}>
           <h2 style={{ fontSize: "1.25rem", fontWeight: 600, marginBottom: "1.5rem", display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--bosch-dark-blue)" }}>
@@ -109,7 +121,7 @@ const Strategy = () => {
               <div>
                 <h4 style={{ margin: 0, fontSize: "1rem", fontWeight: 600 }}>Maximum Spend Authority</h4>
                 <p style={{ margin: "0.25rem 0 0 0", fontSize: "0.875rem", color: "var(--text-secondary)" }}>
-                  The AI agent may autonomously approve Purchase Orders up to <strong>$50,000 USD</strong>. Any procurement exceeding this threshold must be flagged for Human-in-the-Loop review.
+                  The AI agent may autonomously approve Purchase Orders up to <strong>${approvalThreshold.toLocaleString()} USD</strong>. Any procurement exceeding this threshold must be flagged for Human-in-the-Loop review.
                 </p>
               </div>
             </div>

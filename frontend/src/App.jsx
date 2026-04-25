@@ -12,12 +12,12 @@ import AuditLog from "./pages/AuditLog";
 import ControlCentre from "./pages/ControlCentre";
 import Preferences from "./pages/Preferences";
 import "./pages/Preferences.css";
-import { MockDataProvider } from "./context/MockDataContext";
+import { DataProvider } from "./context/DataContext";
 import "./index.css";
 
 function App() {
   return (
-    <MockDataProvider>
+    <DataProvider>
       <Router>
         <div className="app-container">
           <Sidebar />
@@ -33,7 +33,7 @@ function App() {
           </main>
         </div>
       </Router>
-    </MockDataProvider>
+    </DataProvider>
   );
 }
 
