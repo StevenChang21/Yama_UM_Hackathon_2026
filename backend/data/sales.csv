@@ -1,9 +1,6 @@
-order_id,customer,item_id,qty,status,due_date,notes,valid_from,revision
-ORD-101,AutoParts Corp,SKU-A,300,Pending,2026-05-05,Initial order,2026-04-14 09:15,1
-ORD-102,AutoParts Corp,SKU-B,200,Pending,2026-05-05,Initial order,2026-04-14 09:15,1
-ORD-104,NexGen Robotics,SKU-C,150,Pending,2026-05-10,Initial order - pilot deployment,2026-04-16 14:30,1
-ORD-105,NexGen Robotics,SKU-D,100,Pending,2026-05-10,Original order - no changes,2026-04-16 14:30,1
-ORD-101,AutoParts Corp,SKU-A,500,Pending,2026-05-05,Revised up from 300 - larger downstream contract,2026-04-18 10:00,2
-ORD-104,NexGen Robotics,SKU-C,250,Pending,2026-05-10,Revised up from 150 - expanded pilot to 4 sites,2026-04-20 16:45,2
-ORD-102,AutoParts Corp,SKU-B,100,Pending,2026-05-05,Revised down from 200 - substituting with SKU-D,2026-04-22 13:00,2
-ORD-103,AutoParts Corp,SKU-D,100,Pending,2026-05-05,New line item replacing 100 units of SKU-B,2026-04-22 13:00,1
+order_id,customer,item_id,qty,status,due_date,notes
+ORD-105,NexGen Robotics,SKU-D,100,Pending,2026-05-10,Original order - no changes
+ORD-101,AutoParts Corp,SKU-A,500,Pending,2026-05-05,Revised up from 300 - larger downstream contract
+ORD-104,NexGen Robotics,SKU-C,250,Pending,2026-05-10,Revised up from 150 - expanded pilot to 4 sites
+ORD-102,AutoParts Corp,SKU-B,100,Pending,2026-05-05,Revised down from 200 - substituting with SKU-D
+ORD-103,AutoParts Corp,SKU-D,100,Pending,2026-05-05,New line item replacing 100 units of SKU-B
