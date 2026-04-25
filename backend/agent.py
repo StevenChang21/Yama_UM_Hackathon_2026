@@ -153,6 +153,12 @@ def process_emails():
         date = str(email["date"])
         body = str(email["body"])
         
+        # Limit input size to 8,000 words (system threshold)
+        words = body.split()
+        if len(words) > 8000:
+            body = " ".join(words[:8000]) + "\n\n[TRUNCATED: Input exceeded 8,000 words limit]"
+            print(f"Warning: Email {eid} body truncated (exceeded 8,000 words).")
+        
         set_status("Analyzing context and reasoning with AI...", eid)
         print(f"Processing {eid} via AI...")
 
@@ -272,7 +278,8 @@ Analyze this email and decide the best action. Return ONLY a JSON object with th
   "risks": ["List of risks detected"],
   "csv_updates": {{
     "inventory_changes": [ {{"item_id": "...", "stock_change": 0}} ],
-    "finance_changes": [ {{"account_name": "Operating Cash" or "Pending Payables", "balance_change": 0}} ]
+    "finance_changes": [ {{"account_name": "Operating Cash" or "Pending Payables", "balance_change": 0}} ],
+    "sales_changes": [ {{"order_id": "...", "status": "Cancelled" or "Pending" or "Completed", "notes": "..."}} ]
   }}
 }}
 
@@ -381,6 +388,20 @@ If no CSV updates are needed, leave arrays empty. Return ONLY valid JSON, no mar
                         fin_df.loc[idx[-1], "notes"] = f"AI Update from {eid}"
                     files_modified.add("finance.csv")
                     entry["files_updated"].append("finance.csv")
+            
+            for sales_upd in updates.get("sales_changes", []):
+                oid = sales_upd.get("order_id")
+                new_status = sales_upd.get("status")
+                new_notes = sales_upd.get("notes")
+                if oid:
+                    idx = sales_df.index[sales_df["order_id"] == oid].tolist()
+                    if idx:
+                        if new_status:
+                            sales_df.loc[idx[-1], "status"] = new_status
+                        if new_notes:
+                            sales_df.loc[idx[-1], "notes"] = new_notes
+                        files_modified.add("sales.csv")
+                        entry["files_updated"].append("sales.csv")
                     
         except Exception as e:
             entry["inference"] = f"AI Error: {e}"
@@ -428,6 +449,7 @@ If no CSV updates are needed, leave arrays empty. Return ONLY valid JSON, no mar
     save_csv("inventory.csv", inv_df)
     save_csv("manufacturing.csv", mfg_df)
     save_csv("finance.csv", fin_df)
+    save_csv("sales.csv", sales_df)
 
     set_status("Idle", None)
     return audit_log, list(files_modified)
