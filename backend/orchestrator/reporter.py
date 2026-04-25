@@ -1,11 +1,8 @@
 """
-Status Reporter Module (Interface Segregation Principle)
+Status Reporter Module
 
 StatusReporter: Small abstract interface with just 3 methods (status/result/error).
 WebSocketReporter: Concrete implementation that sends updates over WebSocket.
-
-Interface Segregation: The Orchestrator only sees the 3 methods it needs.
-It doesn't know or care that it's a WebSocket underneath.
 """
 
 from abc import ABC, abstractmethod

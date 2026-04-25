@@ -1,11 +1,8 @@
 """
-Tool Registry Module (Open/Closed Principle)
+Tool Registry Module
 
 Tool: A dataclass representing one callable function the AI can invoke.
 ToolRegistry: A dictionary-like container that stores Tools by name.
-
-Open/Closed: You add new tools by calling registry.register(Tool(...)),
-without ever modifying the ToolRegistry class itself.
 """
 
 from dataclasses import dataclass

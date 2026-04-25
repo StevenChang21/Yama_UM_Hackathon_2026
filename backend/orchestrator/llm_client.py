@@ -1,5 +1,5 @@
 """
-LLM Client Module (Dependency Inversion + Liskov Substitution)
+LLM Client Module 
 
 LLMClient: Abstract base class — the Orchestrator depends on this abstraction.
 ILMUClient: Concrete implementation that calls the ILMU API via OpenAI SDK.
