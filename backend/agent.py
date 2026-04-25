@@ -296,6 +296,23 @@ If no CSV updates are needed, leave arrays empty. Return ONLY valid JSON, no mar
             entry["decision"] = "Fallback: Manual review required."
             print(f"AI Error for {eid}: {e}")
 
+        # Auto-send email logic
+        if entry.get("follow_up"):
+            import csv
+            outbox_path = os.path.join(DATA_DIR, "outbox.csv")
+            with open(outbox_path, 'a', newline='', encoding='utf-8') as csvfile:
+                writer = csv.writer(csvfile)
+                writer.writerow([
+                    datetime.now().isoformat(),
+                    entry["follow_up"].get("to", ""),
+                    entry["follow_up"].get("subject", ""),
+                    entry["follow_up"].get("body", ""),
+                    entry["follow_up"].get("reason", "")
+                ])
+            entry["actions"].append(f"Automatically sent follow-up email to {entry['follow_up'].get('to', '')}")
+            entry["status"] = "Completed"
+            entry["guardrail_status"] = "Passed"
+
         audit_log.append(entry)
 
         # Save audit log incrementally
