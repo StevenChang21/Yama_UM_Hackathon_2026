@@ -1,6 +1,8 @@
 # Yama_UM_Hackathon_2026
 UM hackathon 2026
 
+DEMO VIDEO LINK: https://drive.google.com/file/d/1mgYzcwTNrljiMOSGxcO1qAIcp7BKTGQ4/view?usp=sharing
+
 ## Setup Instructions
 
 ### Environment Variables (.env)
