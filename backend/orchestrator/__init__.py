@@ -4,7 +4,7 @@ Z.AI Supply Chain Orchestrator Package
 Modules:
 - data_repository: CSV data access layer
 - tool_registry:   Tool definitions and registry
-- llm_client:      Abstract LLM interface + ILMU implementation
+- llm_client:      Abstract LLM interface + Gemini implementation
 - reporter:        Status reporting interface + WebSocket implementation
 - orchestrator:    Main agentic reasoning loop
 """

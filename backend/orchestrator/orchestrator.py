@@ -17,7 +17,7 @@ from typing import Optional
 
 from .data_repository import DataRepository
 from .tool_registry import Tool, ToolRegistry
-from .llm_client import LLMClient, ILMUClient
+from .llm_client import LLMClient, GeminiClient
 from .reporter import StatusReporter, WebSocketReporter
 
 
@@ -78,7 +78,7 @@ class Orchestrator:
 
     async def run(self, reporter: StatusReporter, input_text: str) -> None:
         """Entry point: run the full agentic orchestration loop."""
-        await reporter.status("Received input. Initializing Agent (Provider: ILMU / Z.AI)...")
+        await reporter.status("Received input. Initializing Agent (Provider: Gemini / Z.AI)...")
         await asyncio.sleep(0.5)
 
         # No LLM client → fall back to mock demo
@@ -92,15 +92,15 @@ class Orchestrator:
         ]
 
         for step in range(1, self.MAX_STEPS + 1):
-            await reporter.status(f"Step {step}: Reasoning / Requesting ILMU...")
+            await reporter.status(f"Step {step}: Reasoning / Requesting Gemini...")
 
             try:
                 # message is a ChatCompletionMessage (Pydantic model), NOT a string.
                 # That's why it has .tool_calls, .content, .model_dump()
                 message = self._llm.chat_completion(messages, self._tools.get_openai_schemas())
             except Exception as e:
-                # ILMU API unreachable → fall back to mock result so the UI still works
-                await reporter.status(f"ILMU API unavailable ({e}). Falling back to mock recommendation...")
+                # Gemini API unreachable → fall back to mock result so the UI still works
+                await reporter.status(f"Gemini API unavailable ({e}). Falling back to mock recommendation...")
                 await self._run_mock(reporter)
                 return
 
@@ -147,7 +147,7 @@ class Orchestrator:
             result_json = json.loads(content.strip())
             await reporter.result(result_json)
         except json.JSONDecodeError:
-            await reporter.error("Failed to parse ILMU output as JSON.", message.content)
+            await reporter.error("Failed to parse Gemini output as JSON.", message.content)
 
     @staticmethod
     def _strip_code_fences(text: str) -> str:
@@ -160,7 +160,7 @@ class Orchestrator:
 
     async def _run_mock(self, reporter: StatusReporter) -> None:
         """Simulate the agentic flow when no API key is configured."""
-        await reporter.status("ILMU API Key missing. Simulating mock reasoning flow...")
+        await reporter.status("Gemini API Key missing. Simulating mock reasoning flow...")
         await asyncio.sleep(1)
         await reporter.status("Calling get_unread_emails...")
         await asyncio.sleep(1)
@@ -210,8 +210,8 @@ def create_orchestrator(as_of_date: Optional[str] = None) -> Orchestrator:
     data_repo = DataRepository(data_dir, as_of_date=as_of_date)
     tool_registry = _build_tool_registry(data_repo)
 
-    ilmu_api_key = os.environ.get("ILMU_API_KEY")
-    llm_client = ILMUClient(api_key=ilmu_api_key) if ilmu_api_key else None
+    gemini_api_key = os.environ.get("GEMINI_API_KEY")
+    llm_client = GeminiClient(api_key=gemini_api_key) if gemini_api_key else None
 
     return Orchestrator(llm_client=llm_client, tool_registry=tool_registry)
 

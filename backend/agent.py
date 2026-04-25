@@ -5,12 +5,26 @@ Reads emails.csv, reasons about each email, updates relevant CSVs, produces audi
 
 import os
 import json
+import csv
 import pandas as pd
 from datetime import datetime
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 AUDIT_LOG_PATH = os.path.join(DATA_DIR, "audit_log.json")
 STATUS_PATH = os.path.join(DATA_DIR, "agent_status.json")
+
+def remove_spam_from_emails_csv(spam_id):
+    csv_path = os.path.join(DATA_DIR, "emails.csv")
+    if not os.path.exists(csv_path): return
+    with open(csv_path, "r", encoding="utf-8") as f:
+        reader = list(csv.DictReader(f))
+    with open(csv_path, "w", encoding="utf-8", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=["id", "sender", "subject", "date", "body"])
+        writer.writeheader()
+        for row in reader:
+            if row["id"] != spam_id:
+                writer.writerow(row)
+
 
 def set_status(status_msg, email_id=None):
     with open(STATUS_PATH, "w") as f:
@@ -57,7 +71,13 @@ def process_emails():
     processed_ids = {e.get("email_id") for e in audit_log}
     files_modified = set()
 
-    from email_reader import ai_client
+    from openai import OpenAI
+    api_key = os.environ.get("GEMINI_API_KEY", "")
+    ai_client = OpenAI(
+        api_key=api_key,
+        base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
+    ) if api_key else None
+
     
     emails_processed_this_run = 0
 
@@ -94,9 +114,6 @@ def process_emails():
     dynamic_prefs_str = "\n".join(pref_lines)
 
     for _, email in emails_df.iterrows():
-        if emails_processed_this_run >= 1:
-            break
-            
         eid = email["id"]
         if eid in processed_ids:
             continue
@@ -210,6 +227,7 @@ Body: {body}
 INSTRUCTIONS:
 Analyze this email and decide the best action. Return ONLY a JSON object with this EXACT structure:
 {{
+  "is_spam": false,
   "work_name": "Short concrete task title describing what you modified (e.g. 'Update Sales ORD-101 from 300 to 500')",
   "affected_source": "Which CSV file is affected (emails.csv, inventory.csv, sales.csv, manufacturing.csv, finance.csv, logistics.csv, or suppliers.csv)",
   "agent_description": "Precise description of what you (the AI agent) DID — not what the email says. Describe data changes, POs created, status updates made, emails drafted. Reference specific file names, order IDs, quantities.",
@@ -231,6 +249,8 @@ Analyze this email and decide the best action. Return ONLY a JSON object with th
   }}
 }}
 
+If the email is spam, promotional, or completely irrelevant to YamaTech operations, set "is_spam": true and skip the rest of the fields.
+
 CRITICAL ACCOUNTING RULES:
 1. If you place an order with a supplier, you MUST use the exact unit cost from the 'Approved Suppliers & Pricing' list.
 2. If the supplier's payment_terms are 'Net30', 'Net45', or 'Net60', you MUST increase 'Pending Payables' instead of immediately deducting from 'Operating Cash'. Only deduct from 'Operating Cash' if terms require immediate payment.
@@ -244,7 +264,7 @@ If no CSV updates are needed, leave arrays empty. Return ONLY valid JSON, no mar
 
         try:
             response = ai_client.chat.completions.create(
-                model="ilmu-glm-5.1",
+                model="gemini-3.1-flash-lite-preview",
                 messages=[
                     {"role": "system", "content": "You are a JSON-only API. No markdown formatting, just raw JSON."},
                     {"role": "user", "content": prompt}
@@ -260,6 +280,18 @@ If no CSV updates are needed, leave arrays empty. Return ONLY valid JSON, no mar
             
             try:
                 res = json.loads(content)
+                
+                if res.get("is_spam", False):
+                    print(f"Spam detected: {eid}. Deleting from database.")
+                    remove_spam_from_emails_csv(eid)
+                    entry["inference"] = "Email classified as spam/irrelevant."
+                    entry["decision"] = "Deleted from database."
+                    entry["status"] = "Skipped"
+                    audit_log.append(entry)
+                    with open(AUDIT_LOG_PATH, "w") as f:
+                        json.dump(audit_log, f, indent=2, default=str)
+                    continue
+
                 entry["inference"] = res.get("inference", "")
                 entry["decision"] = res.get("decision", "")
                 entry["actions"] = res.get("actions", [])

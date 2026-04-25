@@ -14,25 +14,44 @@ from orchestrator import process_orchestration
 
 load_dotenv()
 from email_reader import (
-    email_poll_loop,
     process_emails,
     get_all_alerts,
     clear_alerts,
 )
 
-# Start the email poll loop as a background task when the app starts
+# Start the unified background task when the app starts
 @asynccontextmanager
 async def lifespan(app):
-    from main import run_agent_loop
-    # Startup: launch email polling background task and agent processing loop
-    task1 = asyncio.create_task(email_poll_loop())
-    task2 = asyncio.create_task(run_agent_loop())
+    from main import unified_background_loop
+    # Startup: launch unified background task
+    task = asyncio.create_task(unified_background_loop())
     yield
     # Shutdown: cancel the background tasks
-    task1.cancel()
-    task2.cancel()
+    task.cancel()
 
 app = FastAPI(title="AI Inventory Replenishment API", lifespan=lifespan)
+
+def get_unprocessed_email_count() -> int:
+    emails_path = os.path.join("data", "emails.csv")
+    audit_path = os.path.join("data", "audit_log.json")
+    
+    processed_ids = set()
+    if os.path.exists(audit_path):
+        try:
+            with open(audit_path) as f:
+                log = json.load(f)
+                processed_ids = {e.get("email_id") for e in log}
+        except:
+            pass
+            
+    if os.path.exists(emails_path):
+        try:
+            df = pd.read_csv(emails_path)
+            unprocessed = [eid for eid in df["id"] if eid not in processed_ids]
+            return len(unprocessed)
+        except:
+            pass
+    return 0
 
 # Setup CORS for the frontend
 app.add_middleware(
@@ -174,20 +193,28 @@ def update_preferences(prefs: dict):
 
 @app.on_event("startup")
 async def startup_event():
-    # Start the agent background loop
-    asyncio.create_task(run_agent_loop())
+    # Legacy startup event replaced by lifespan
+    pass
 
-async def run_agent_loop():
-    """Background task that runs the agent every 10 minutes."""
+async def unified_background_loop():
+    """Background task that polls emails every 10 minutes and triggers the agent if new emails are found."""
+    from email_reader import process_emails as fetch_and_analyze_emails
     from agent import process_emails as run_agent_process
-    print("[Agent] Starting 10-minute background poll loop...")
+    print("[Background] Starting 10-minute unified background poll loop...")
     while True:
         try:
-            print("[Agent] Triggering background agent run...")
-            await asyncio.to_thread(run_agent_process)
+            print(f"[Background] Polling for new emails at {datetime.now().isoformat()}...")
+            await asyncio.to_thread(fetch_and_analyze_emails)
+            
+            unprocessed_count = await asyncio.to_thread(get_unprocessed_email_count)
+            if unprocessed_count > 0:
+                print(f"[Background] Found {unprocessed_count} unprocessed emails. Triggering agent...")
+                await asyncio.to_thread(run_agent_process)
+            else:
+                print("[Background] No new work-related emails found. Agent skipped.")
         except Exception as e:
-            print(f"[Agent] Loop error: {e}")
-        await asyncio.sleep(10)  # 10 seconds for live demo
+            print(f"[Background] Loop error: {e}")
+        await asyncio.sleep(600)  # 10 minutes
 
 @app.get("/api/agent/status")
 def get_agent_status():
@@ -254,3 +281,4 @@ async def websocket_endpoint(websocket: WebSocket):
         print("Client disconnected")
     except Exception as e:
         print(f"Websocket error: {e}")
+
